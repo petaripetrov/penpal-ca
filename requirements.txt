@@ -1,28 +1,22 @@
 # Core language and processing dependencies
-langchain-core>=0.1.0
-langchain>=0.1.0
-langchain-community>=0.0.13
-langchain-ollama>=0.0.1
-langchain-huggingface>=0.0.1
-langchain-chroma>=0.0.1
+langchain-core>=0.3.43
+langchain>=0.3.20
+langchain-community>=0.3.19
+langchain-ollama>=0.2.3
+langchain-huggingface>=0.1.2
+langchain-chroma>=0.2.2
 
 # Speech recognition and text-to-speech
-SpeechRecognition>=3.10.0
-gTTS>=2.3.2
-pygame>=2.5.2
+SpeechRecognition>=3.14.1
+gTTS>=2.5.4
+pygame>=2.6.1
+PyAudio>=0.2.14
 
 # Embedding and vector database
-sentence-transformers>=2.2.2
-chromadb>=0.4.18
+sentence-transformers>=3.4.1
+chromadb>=0.6.3
 
 # File handling and utilities
-pathlib>=1.0.1
-codecs>=1.15.0
+# pathlib>=1.0.1
+# codecs>=1.15.0
 
-# If you're using Python < 3.9, you might need these
-# (they're part of the standard library in Python 3.9+)
-datetime
-json
-time
-re
-os
