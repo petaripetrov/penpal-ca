@@ -1,28 +1,23 @@
 import os
+import re  # For text cleaning
 import json
-from datetime import datetime
-from pathlib import Path
 import time
-import speech_recognition as sr
-from gtts import gTTS
+import codecs  # Import codecs for proper file handling
+
 import pygame
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+import speech_recognition as sr
+
+from gtts import gTTS
+from pathlib import Path
+from datetime import datetime
+from langchain_chroma import Chroma
 from langchain_ollama import OllamaLLM
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-from langchain.memory import ConversationSummaryBufferMemory
-from langchain_chroma import Chroma
-from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.chains import RetrievalQA
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.messages import get_buffer_string
-from langchain_core.prompts import MessagesPlaceholder
-import codecs  # Import codecs for proper file handling
-import re  # For text cleaning
+from langchain_core.output_parsers import StrOutputParser
+from langchain_community.document_loaders import TextLoader
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.memory import ConversationBufferMemory, ConversationSummaryBufferMemory
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
@@ -59,7 +54,7 @@ class CulturalPenPal:
         self.persistence_dir.mkdir(exist_ok=True)
         
         # Define supported cultures and their associated languages
-        self.culture_profiles = json.load(open("culture_profiles.json"), encoding='utf-8')
+        self.culture_profiles = json.load(open("culture_profiles.json"))
         
         # Memory files based on default culture
         self.memory_files = {}
@@ -306,7 +301,7 @@ class CulturalPenPal:
             print("Listening for your input...")
             # Adjust for ambient noise (optional, but helps accuracy)
             recognizer.adjust_for_ambient_noise(source, duration=1)
-            audio = recognizer.listen(source, timeout=10, phrase_time_limit=15)
+            audio = recognizer.listen(source, timeout=10)
         
         try:
             # Always use English for speech recognition unless explicitly toggled
