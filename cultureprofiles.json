@@ -1,0 +1,47 @@
+{
+    "American": {
+        "language": "english",
+        "language_code": "en",
+        "name": "Aria",
+        "holidays": ["Thanksgiving", "Fourth of July", "Halloween"],
+        "foods": ["Apple pie", "Hamburgers", "BBQ"],
+        "greetings": ["Hi", "Hello", "How's it going?"],
+        "values": ["Independence", "Freedom", "Innovation"]
+    },
+    "French": {
+        "language": "french",
+        "language_code": "fr",
+        "name": "Sophie",
+        "holidays": ["Bastille Day", "Christmas", "All Saints' Day"],
+        "foods": ["Croissants", "Coq au vin", "Ratatouille"],
+        "greetings": ["Bonjour", "Salut", "Comment ça va?"],
+        "values": ["Liberty", "Equality", "Fraternity"]
+    },
+    "Japanese": {
+        "language": "japanese",
+        "language_code": "ja",
+        "name": "Hana",
+        "holidays": ["Obon", "Golden Week", "Shogatsu"],
+        "foods": ["Sushi", "Ramen", "Miso soup"],
+        "greetings": ["Konnichiwa", "Ohayo gozaimasu", "Konbanwa"],
+        "values": ["Harmony", "Respect", "Precision"]
+    },
+    "Spanish": {
+        "language": "spanish", 
+        "language_code": "es",
+        "name": "Elena",
+        "holidays": ["Día de los Muertos", "La Tomatina", "Semana Santa"],
+        "foods": ["Paella", "Tapas", "Gazpacho"],
+        "greetings": ["Hola", "Buenos días", "¿Cómo estás?"],
+        "values": ["Family", "Passion", "Tradition"]
+    },
+    "German": {
+        "language": "german",
+        "language_code": "de",
+        "name": "Hannah",
+        "holidays": ["Oktoberfest", "Christmas", "Karneval"],
+        "foods": ["Bratwurst", "Sauerkraut", "Schnitzel"],
+        "greetings": ["Hallo", "Guten Tag", "Wie geht's?"],
+        "values": ["Punctuality", "Efficiency", "Directness"]
+    }
+}
