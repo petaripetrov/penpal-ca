@@ -415,23 +415,29 @@ class CulturalPenPal:
     
     def converse(self):
         """Main function to handle speech-based conversation"""
-        # Greeting
-        profile = self.culture_profiles[self.current_culture]
-        greeting = f"Hello! I'm {self.name}, your {self.current_culture} cultural pen pal. What would you like to talk about today? By default, I'll listen to you in English. If you need to toggle the speech recognition language, just say 'toggle speech recognition'."
+        greeting = f"Hello! I'm {self.name}, your {self.current_culture} cultural pen pal. What would you like to talk about today? By default, I'll listen to you in English. If you need to toggle the speech recognition language, just say/type 'toggle speech recognition'. If you want to switch between text and speech say/type 'use text' or 'use speech' respectively."
         print(f"{self.name}: {greeting}")
         self.speak_output(greeting)
         
         while True:
             try:
-                # Get user input through speech
-                user_input = self.listen_for_input()
+                user_input = None
                 
-                # Check if user wants to exit
+                if self.use_speech:
+                user_input = self.listen_for_input()
+                else:
+                    user_input = input("Message: ")
+                
                 if user_input.lower() in ["exit", "goodbye", "bye", "quit", "end"]:
                     farewell = f"It was nice talking with you! Goodbye!"
                     print(f"{self.name}: {farewell}")
                     self.speak_output(farewell)
                     break
+                
+                if user_input.lower() == "use text":
+                    self.use_speech = False
+                elif user_input.lower() == "use speech":
+                    self.use_speech = True
                 
                 # Check if user wants to toggle speech recognition or switch language/culture
                 requested_action = self.detect_language_request(user_input)
@@ -457,11 +463,12 @@ class CulturalPenPal:
                     "long_term_memory": self.long_term_summary_memory.buffer
                 })
                 
-                # Clean the response
                 clean_response = self.clean_response(raw_response)
                 
-                # Store in memory
-                self.add_to_long_term_memory(user_input, clean_response)
+                # This is wrong right now, we are saving conversations to both long and short-term memory to showcase the memory handling
+                # In the full implementation, long-term memory will be populated with usefull culture/language information
+                # While short-term memory will hold information about the conversation
+                self.add_to_short_term_memory(user_input, clean_response)
                 
                 # Output response
                 print(f"{self.name}: {clean_response}")
