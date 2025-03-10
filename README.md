@@ -1,6 +1,6 @@
 # Requirements
 - Python 3.12
-- Ollama
+- [Ollama](https://ollama.com/)
 
 # Installation
 ```sh
