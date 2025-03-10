@@ -1,8 +1,8 @@
 import os
-import re  # For text cleaning
+import re  
 import json
 import time
-import codecs  # Import codecs for proper file handling
+import codecs
 
 import pygame
 import speech_recognition as sr
@@ -37,43 +37,36 @@ class CulturalPenPal:
         self.current_culture = culture
         self.current_language = "english"
         
-        # Add a flag to control speech recognition language
-        self.speech_recognition_language = "en-US"  # Always start with English
+        self.speech_recognition_language = "en-US"
+        self.use_speech = False
         
-        # Set up the language model using Ollama (free, runs locally)
-        # You need to have Ollama installed: https://ollama.ai/
         self.llm = OllamaLLM(model=model_name)
         
-        # Use HuggingFace embeddings (free, runs locally)
         self.embeddings = HuggingFaceEmbeddings(
             model_name="all-MiniLM-L6-v2"
         )
         
-        # Create directory for persistence if it doesn't exist
         self.persistence_dir = Path(persistence_dir)
         self.persistence_dir.mkdir(exist_ok=True)
         
-        # Define supported cultures and their associated languages
         self.culture_profiles = json.load(open("culture_profiles.json"))
         
-        # Memory files based on default culture
+        # Initialize memory storage for each culture
         self.memory_files = {}
         self.conversation_log_files = {}
         self.vector_stores = {}
         
-        # Initialize memory storage for each culture
         for culture in self.culture_profiles:
             culture_name = self.culture_profiles[culture]["name"]
             self.memory_files[culture] = self.persistence_dir / f"{culture_name.lower()}_memory.json"
             self.conversation_log_files[culture] = self.persistence_dir / f"{culture_name.lower()}_conversations.txt"
         
-        # Set up short-term memory (current conversation context)
+        # Set up short-term memories
         self.short_term_memory = ConversationBufferMemory(
             memory_key="short_term_memory", 
             return_messages=True
         )
         
-        # Set up long-term summarized memory
         self.long_term_summary_memory = ConversationSummaryBufferMemory(
             llm=self.llm,
             max_token_limit=500,
@@ -81,21 +74,18 @@ class CulturalPenPal:
             return_messages=True
         )
         
-        # Knowledge about the pen pal (persistent data for each culture)
         self.knowledge = {}
         for culture in self.culture_profiles:
             self.knowledge[culture] = self._load_knowledge(culture)
         
-        # Initialize vector stores for each culture
         for culture in self.culture_profiles:
             self.vector_stores[culture] = self._initialize_vector_store(culture)
         
-        # Setup the conversation chain with the default culture
         self.setup_conversation_chain()
         
         # Initialize pygame for audio playback
         pygame.mixer.init()
-        print(f"{self.name} is ready to converse! Say 'exit' to end the conversation.")
+        print(f"{self.name} is ready to converse! Say or type 'exit' to end the conversation.")
         
     def _load_knowledge(self, culture):
         """Load the pen pal's knowledge from file or initialize if not exists"""
@@ -152,7 +142,6 @@ class CulturalPenPal:
         conversation_log_file = self.conversation_log_files[culture]
         
         if conversation_log_file.exists():
-            # Use TextLoader with proper encoding
             loader = TextLoader(str(conversation_log_file), encoding='utf-8')
             documents = loader.load()
             text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
@@ -188,13 +177,11 @@ class CulturalPenPal:
             # Save current state
             self._save_knowledge()
             
-            # Switch to new personality
+            # Set up new conversation chain
             self.current_culture = new_culture
             profile = self.culture_profiles[new_culture]
             self.name = profile["name"]
             self.current_language = profile["language"]
-            
-            # Update the conversation chain with the new personality
             self.setup_conversation_chain()
             
             # Reset short-term memory for the new personality
@@ -211,12 +198,12 @@ class CulturalPenPal:
                 return_messages=True
             )
             
-            # Log the personality switch
-            switch_message = f"Switched personality to {self.name} from {new_culture} culture."
-            print(switch_message)
             return f"Hello! I'm {self.name}, your {new_culture} cultural pen pal. I'll be speaking in {profile['language']} from now on. How can I help you today?"
         else:
             return f"I'm sorry, I don't have information about {new_culture} culture. I'll continue as {self.name} from {self.current_culture} culture."
+    
+    def get_learnable_words(self):
+        return [] # todo populate
     
     def setup_conversation_chain(self):
         """Set up the LangChain conversation chain with the system prompt"""
@@ -229,23 +216,24 @@ class CulturalPenPal:
         - You are a native {profile["language"]} speaker who is friendly, patient, and encouraging
         - You love sharing information about your culture including traditions, food, language, history, and daily life
         - You are curious about the user's culture and enjoy having meaningful conversations
-        - You can help users learn {profile["language"]} if they express interest
+        - You help users learn {profile["language"]}
         
         IMPORTANT RULES:
-        - NEVER add prefixes like "AI:" or "{self.name}:" before your responses
-        - Keep your responses concise and conversational as they will be spoken aloud
+        - Keep your responses short and conversational as they can be spoken aloud
         - Respond primarily in {profile["language"]} if the user is learning, but include English translations when appropriate
         - If the user asks to learn a different language, do not switch languages yourself but inform them that they can request to speak with a different cultural pen pal
-        - Avoid using emojis or special characters that might cause encoding issues
         - If you detect that the user is a beginner, use simpler words and shorter sentences
+        - NEVER add prefixes like "AI:" or "{self.name}:" before your responses
+        - NEVER using emojis or special characters that might cause encoding issues
         
         TEACHING APPROACH:
         - Gradually introduce new vocabulary and phrases
         - Provide gentle corrections to language mistakes
         - Explain cultural context when relevant
         - Adapt to the user's proficiency level
+        - Make sure to include the following words in your speech whenever possible: {self.get_learnable_words()}
         
-        Always remember that you are {self.name} from {self.current_culture} culture speaking {profile["language"]}.
+        Always remember that you are {self.name} from {self.current_culture} culture speaking {profile["language"]} and NEVER deviate from the outlined rules.
         """
         
         self.prompt = ChatPromptTemplate.from_messages([
@@ -267,12 +255,10 @@ class CulturalPenPal:
         
         return response.strip()
     
-    def add_to_long_term_memory(self, user_input, response):
+    def add_to_short_term_memory(self, user_input, response):
         """Add the current interaction to long-term memory storage"""
-        # Add to conversation buffer memory
+        # Save to memory (for the time being long and short term memory behave the same way)
         self.short_term_memory.save_context({"input": user_input}, {"output": response})
-        
-        # Add to long-term summary memory
         self.long_term_summary_memory.save_context({"input": user_input}, {"output": response})
         
         # Log conversation
@@ -299,7 +285,6 @@ class CulturalPenPal:
         recognizer = sr.Recognizer()
         with sr.Microphone() as source:
             print("Listening for your input...")
-            # Adjust for ambient noise (optional, but helps accuracy)
             recognizer.adjust_for_ambient_noise(source, duration=1)
             audio = recognizer.listen(source, timeout=10)
         
@@ -321,48 +306,35 @@ class CulturalPenPal:
     def speak_output(self, text):
         """Convert text to speech and play the audio"""
         try:
-        # Clean the text
             text = self.clean_response(text)
-        
-        # Get the language code for the current culture
             language_code = self.culture_profiles[self.current_culture]["language_code"]
         
-        # Split text into sentences or smaller chunks
-        # This regex splits on sentence boundaries (.!?) but keeps the punctuation
-            import re
             chunks = re.split(r'(?<=[.!?])\s+', text)
             chunks = [chunk for chunk in chunks if chunk.strip()]  # Remove empty chunks
         
-        # Process each chunk separately
             for i, chunk in enumerate(chunks):
-            # For very long chunks, we might need to split further
                 if len(chunk) > 200:
                     subchunks = [chunk[j:j+200] for j in range(0, len(chunk), 200)]
                 else:
                     subchunks = [chunk]
             
                 for subchunk in subchunks:
-                # Create a unique filename for each chunk to avoid conflicts
                     speech_file = f"response_chunk_{i}.mp3"
                 
-                # Generate TTS for this chunk
                     tts = gTTS(text=subchunk, lang=language_code, slow=False)
                     tts.save(speech_file)
                 
-                # Play this chunk
                     pygame.mixer.music.load(speech_file)
                     pygame.mixer.music.play()
                 
-                # Wait for this chunk to finish playing
                     while pygame.mixer.music.get_busy():
                         time.sleep(0.1)
                 
-                # Clean up after playing
                     pygame.mixer.music.unload()
                     try:
                         os.remove(speech_file)
                     except:
-                        pass  # If file removal fails, continue anyway
+                        pass
                 
         except Exception as e:
             print(f"Error in text-to-speech: {str(e)}")
@@ -424,7 +396,7 @@ class CulturalPenPal:
                 user_input = None
                 
                 if self.use_speech:
-                user_input = self.listen_for_input()
+                    user_input = self.listen_for_input()
                 else:
                     user_input = input("Message: ")
                 
@@ -483,13 +455,12 @@ class CulturalPenPal:
                 print(f"{self.name}: {err_msg}")
                 self.speak_output(err_msg)
 
-# Entry point to run the app
 if __name__ == "__main__":
     # Create a cultural pen pal instance
     pen_pal = CulturalPenPal(
         name="Aria",
         culture="American",
-        model_name="llama2"  # Change to the model you have installed with Ollama
+        model_name="llama2" # TODO maybe introduce a CLI flag for easy model switching
     )
     
     # Start the conversation
