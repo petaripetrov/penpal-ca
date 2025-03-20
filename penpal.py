@@ -21,7 +21,7 @@ from langchain.memory import ConversationBufferMemory, ConversationSummaryBuffer
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
-                 model_name="llama2", 
+                 model_name="llama2", use_memory=True,
                  persistence_dir="pen_pal_data"):
         """
         Initialize the Cultural Pen Pal agent with free language models.
@@ -36,6 +36,7 @@ class CulturalPenPal:
         self.default_culture = culture
         self.current_culture = culture
         self.current_language = "english"
+        self.use_memory = use_memory
         
         self.speech_recognition_language = "en-US"
         self.use_speech = False
@@ -257,13 +258,17 @@ class CulturalPenPal:
         return response.strip()
     
     def load_long_term_memory(self, culture):
+        """Load cultural information into short-term memory"""
+        if not self.use_memory: return
+        
         with open(f"cultures/{culture}.txt", 'r', encoding='utf-8') as f:
             for line in f:
                 country, relation, abstract = line.split("\t")
                 self.long_term_memory.save_context({"input": f"{country} {relation}:"}, {'output': abstract})
     
     def add_to_short_term_memory(self, user_input, response):
-        """Add the current interaction to long-term memory storage"""
+        """Add the current interaction to short-term memory storage"""
+        if not self.use_memory: return
         # Save to memory (for the time being long and short term memory behave the same way)
         self.short_term_memory.save_context({"input": user_input}, {"output": response})
         
@@ -443,10 +448,8 @@ class CulturalPenPal:
                 
                 clean_response = self.clean_response(raw_response)
                 
-                # This is wrong right now, we are saving conversations to both long and short-term memory to showcase the memory handling
-                # In the full implementation, long-term memory will be populated with usefull culture/language information
-                # While short-term memory will hold information about the conversation
-                self.add_to_short_term_memory(user_input, clean_response)
+                if self.use_memory:
+                    self.add_to_short_term_memory(user_input, clean_response)
                 
                 # Output response
                 print(f"{self.name}: {clean_response}")
