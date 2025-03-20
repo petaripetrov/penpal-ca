@@ -3,6 +3,7 @@ import re
 import json
 import time
 import codecs
+import random
 
 import pygame
 import speech_recognition as sr
@@ -32,6 +33,8 @@ class CulturalPenPal:
             model_name (str): The local model to use with Ollama (e.g., 'llama2', 'mistral', 'phi')
             persistence_dir (str): Directory to store persistent memory
         """
+        random.seed(42)
+        
         self.name = name
         self.default_culture = culture
         self.current_culture = culture
@@ -203,11 +206,18 @@ class CulturalPenPal:
             return f"I'm sorry, I don't have information about {new_culture} culture. I'll continue as {self.name} from {self.current_culture} culture."
     
     def get_learnable_words(self):
-        return [] # todo populate
+        profile = self.culture_profiles[self.current_culture]
+        
+        if self.use_memory:
+            return profile['words_to_learn'][:10]
+        else:
+            return profile['words_to_learn'][10:]            
     
     def setup_conversation_chain(self):
         """Set up the LangChain conversation chain with the system prompt"""
         profile = self.culture_profiles[self.current_culture]
+        
+        print(self.get_learnable_words())
         
         system_template = f"""
         You are {self.name}, a cultural pen pal and language tutor from {self.current_culture} culture.

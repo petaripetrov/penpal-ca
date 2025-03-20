@@ -3,45 +3,535 @@
         "language": "english",
         "language_code": "en",
         "name": "Aria",
-        "holidays": ["Thanksgiving", "Fourth of July", "Halloween"],
-        "foods": ["Apple pie", "Hamburgers", "BBQ"],
-        "greetings": ["Hi", "Hello", "How's it going?"],
-        "values": ["Independence", "Freedom", "Innovation"]
+        "holidays": [
+            "Thanksgiving",
+            "Fourth of July",
+            "Halloween"
+        ],
+        "foods": [
+            "Apple pie",
+            "Hamburgers",
+            "BBQ"
+        ],
+        "greetings": [
+            "Hi",
+            "Hello",
+            "How's it going?"
+        ],
+        "values": [
+            "Independence",
+            "Freedom",
+            "Innovation"
+        ],
+        "words_to_learn": [
+            {
+                "word": "Hello",
+                "meaning": "Hello"
+            },
+            {
+                "word": "Thank you very much",
+                "meaning": "Thank you"
+            },
+            {
+                "word": "Excuse me",
+                "meaning": "Excuse me"
+            },
+            {
+                "word": "Enjoy your meal",
+                "meaning": "An expression of gratitude for the meal you’re about to eat"
+            },
+            {
+                "word": "Chef’s recommendation",
+                "meaning": "Used to order chef’s recommendation (often for sushi)"
+            },
+            {
+                "word": "Alcohol",
+                "meaning": "General term for alcohol"
+            },
+            {
+                "word": "Bourbon",
+                "meaning": "Popular American liquor"
+            },
+            {
+                "word": "Non-smoking seat",
+                "meaning": "Non-smoking seat"
+            },
+            {
+                "word": "__ please",
+                "meaning": "I would like __, please"
+            },
+            {
+                "word": "Where is __?",
+                "meaning": "Where is __?"
+            },
+            {
+                "word": "What time is it now?",
+                "meaning": "What time is it now?"
+            },
+            {
+                "word": "At what time?",
+                "meaning": "At what time?"
+            },
+            {
+                "word": "Morning",
+                "meaning": "Morning"
+            },
+            {
+                "word": "Today",
+                "meaning": "Today"
+            },
+            {
+                "word": "Tomorrow",
+                "meaning": "Tomorrow"
+            },
+            {
+                "word": "I want to go to __",
+                "meaning": "I want to go to __"
+            },
+            {
+                "word": "Stop, please",
+                "meaning": "Stop, please"
+            },
+            {
+                "word": "Ticket",
+                "meaning": "Ticket"
+            },
+            {
+                "word": "High-speed train",
+                "meaning": "Bullet train"
+            },
+            {
+                "word": "Which train?",
+                "meaning": "Which train?"
+            }
+        ]
     },
     "French": {
         "language": "french",
         "language_code": "fr",
         "name": "Sophie",
-        "holidays": ["Bastille Day", "Christmas", "All Saints' Day"],
-        "foods": ["Croissants", "Coq au vin", "Ratatouille"],
-        "greetings": ["Bonjour", "Salut", "Comment ça va?"],
-        "values": ["Liberty", "Equality", "Fraternity"]
+        "holidays": [
+            "Bastille Day",
+            "Christmas",
+            "All Saints' Day"
+        ],
+        "foods": [
+            "Croissants",
+            "Coq au vin",
+            "Ratatouille"
+        ],
+        "greetings": [
+            "Bonjour",
+            "Salut",
+            "Comment ça va?"
+        ],
+        "values": [
+            "Liberty",
+            "Equality",
+            "Fraternity"
+        ],
+        "words_to_learn": [
+            {
+                "word": "Bonjour",
+                "meaning": "Hello"
+            },
+            {
+                "word": "Merci beaucoup",
+                "meaning": "Thank you"
+            },
+            {
+                "word": "Excusez-moi",
+                "meaning": "Excuse me"
+            },
+            {
+                "word": "Bon appétit",
+                "meaning": "An expression of gratitude for the meal you’re about to eat"
+            },
+            {
+                "word": "Selon la recommandation du chef",
+                "meaning": "Used to order chef’s recommendation (often for sushi)"
+            },
+            {
+                "word": "Alcool",
+                "meaning": "General term for alcohol"
+            },
+            {
+                "word": "Cognac",
+                "meaning": "Cognac"
+            },
+            {
+                "word": "Place non-fumeur",
+                "meaning": "Non-smoking seat"
+            },
+            {
+                "word": "__ s'il vous plaît",
+                "meaning": "I would like __, please"
+            },
+            {
+                "word": "Où est __?",
+                "meaning": "Where is __?"
+            },
+            {
+                "word": "Quelle heure est-il maintenant?",
+                "meaning": "What time is it now?"
+            },
+            {
+                "word": "À quelle heure?",
+                "meaning": "At what time?"
+            },
+            {
+                "word": "Matin",
+                "meaning": "Morning"
+            },
+            {
+                "word": "Aujourd’hui",
+                "meaning": "Today"
+            },
+            {
+                "word": "Demain",
+                "meaning": "Tomorrow"
+            },
+            {
+                "word": "Je veux aller à __",
+                "meaning": "I want to go to __"
+            },
+            {
+                "word": "Arrêtez-vous, s’il vous plaît",
+                "meaning": "Stop, please"
+            },
+            {
+                "word": "Billet",
+                "meaning": "Ticket"
+            },
+            {
+                "word": "Train à grande vitesse (TGV)",
+                "meaning": "Bullet train"
+            },
+            {
+                "word": "Quel train?",
+                "meaning": "Which train?"
+            }
+        ]
     },
     "Japanese": {
         "language": "japanese",
         "language_code": "ja",
         "name": "Hana",
-        "holidays": ["Obon", "Golden Week", "Shogatsu"],
-        "foods": ["Sushi", "Ramen", "Miso soup"],
-        "greetings": ["Konnichiwa", "Ohayo gozaimasu", "Konbanwa"],
-        "values": ["Harmony", "Respect", "Precision"]
+        "holidays": [
+            "Obon",
+            "Golden Week",
+            "Shogatsu"
+        ],
+        "foods": [
+            "Sushi",
+            "Ramen",
+            "Miso soup"
+        ],
+        "greetings": [
+            "Konnichiwa",
+            "Ohayo gozaimasu",
+            "Konbanwa"
+        ],
+        "values": [
+            "Harmony",
+            "Respect",
+            "Precision"
+        ],
+        "words_to_learn": [
+            {
+                "word": "Konnichiwa",
+                "meaning": "Hello"
+            },
+            {
+                "word": "Arigatou Gozaimasu",
+                "meaning": "Thank you"
+            },
+            {
+                "word": "Sumimasen",
+                "meaning": "Excuse me"
+            },
+            {
+                "word": "Itadakimasu",
+                "meaning": "An expression of gratitude for the meal you’re about to eat"
+            },
+            {
+                "word": "Omakase de",
+                "meaning": "Used to order chef’s recommendation (often for sushi)"
+            },
+            {
+                "word": "O-sake",
+                "meaning": "General term for alcohol"
+            },
+            {
+                "word": "Nihonshu",
+                "meaning": "Japanese sake"
+            },
+            {
+                "word": "Kinen Seki",
+                "meaning": "An expression of gratitude for the meal you’re about to eat"
+            },
+            {
+                "word": "__ o Kudasai",
+                "meaning": "I would like __, please"
+            },
+            {
+                "word": "__ wa Doko Desu ka?",
+                "meaning": "Where is __?"
+            },
+            {
+                "word": "Ima Nanji Desu ka?",
+                "meaning": "What time is it now?"
+            },
+            {
+                "word": "Nanji ni?",
+                "meaning": "At what time?"
+            },
+            {
+                "word": "Asa",
+                "meaning": "Morning"
+            },
+            {
+                "word": "Kyou",
+                "meaning": "Today"
+            },
+            {
+                "word": "Ashita",
+                "meaning": "Tomorrow"
+            },
+            {
+                "word": "__ ni Ikitai",
+                "meaning": "I want to go to __"
+            },
+            {
+                "word": "Tomete Kudasai",
+                "meaning": "Stop, please"
+            },
+            {
+                "word": "Kippu",
+                "meaning": "Ticket"
+            },
+            {
+                "word": "Shinkansen",
+                "meaning": "Bullet train"
+            },
+            {
+                "word": "Dono Densha?",
+                "meaning": "Which train?"
+            }
+        ]
     },
     "Spanish": {
-        "language": "spanish", 
+        "language": "spanish",
         "language_code": "es",
         "name": "Elena",
-        "holidays": ["Día de los Muertos", "La Tomatina", "Semana Santa"],
-        "foods": ["Paella", "Tapas", "Gazpacho"],
-        "greetings": ["Hola", "Buenos días", "¿Cómo estás?"],
-        "values": ["Family", "Passion", "Tradition"]
+        "holidays": [
+            "Día de los Muertos",
+            "La Tomatina",
+            "Semana Santa"
+        ],
+        "foods": [
+            "Paella",
+            "Tapas",
+            "Gazpacho"
+        ],
+        "greetings": [
+            "Hola",
+            "Buenos días",
+            "¿Cómo estás?"
+        ],
+        "values": [
+            "Family",
+            "Passion",
+            "Tradition"
+        ],
+        "words_to_learn": [
+            {
+                "word": "Hola",
+                "meaning": "Hello"
+            },
+            {
+                "word": "Muchas gracias",
+                "meaning": "Thank you"
+            },
+            {
+                "word": "Perdón",
+                "meaning": "Excuse me"
+            },
+            {
+                "word": "Buen provecho",
+                "meaning": "An expression of gratitude for the meal you’re about to eat"
+            },
+            {
+                "word": "Según la recomendación del chef",
+                "meaning": "Used to order chef’s recommendation (often for sushi)"
+            },
+            {
+                "word": "Alcohol",
+                "meaning": "General term for alcohol"
+            },
+            {
+                "word": "Orujo",
+                "meaning": "Popular Spanish liquor"
+            },
+            {
+                "word": "Asiento para no fumadores",
+                "meaning": "Non-smoking seat"
+            },
+            {
+                "word": "__ por favor",
+                "meaning": "I would like __, please"
+            },
+            {
+                "word": "¿Dónde está __?",
+                "meaning": "Where is __?"
+            },
+            {
+                "word": "¿Qué hora es ahora?",
+                "meaning": "What time is it now?"
+            },
+            {
+                "word": "¿A qué hora?",
+                "meaning": "At what time?"
+            },
+            {
+                "word": "Mañana",
+                "meaning": "Morning"
+            },
+            {
+                "word": "Hoy",
+                "meaning": "Today"
+            },
+            {
+                "word": "Mañana",
+                "meaning": "Tomorrow"
+            },
+            {
+                "word": "Quiero ir a __",
+                "meaning": "I want to go to __"
+            },
+            {
+                "word": "Pare, por favor",
+                "meaning": "Stop, please"
+            },
+            {
+                "word": "Billete",
+                "meaning": "Ticket"
+            },
+            {
+                "word": "Tren de alta velocidad (AVE)",
+                "meaning": "Bullet train"
+            },
+            {
+                "word": "¿Qué tren?",
+                "meaning": "Which train?"
+            }
+        ]
     },
     "German": {
         "language": "german",
         "language_code": "de",
         "name": "Hannah",
-        "holidays": ["Oktoberfest", "Christmas", "Karneval"],
-        "foods": ["Bratwurst", "Sauerkraut", "Schnitzel"],
-        "greetings": ["Hallo", "Guten Tag", "Wie geht's?"],
-        "values": ["Punctuality", "Efficiency", "Directness"]
+        "holidays": [
+            "Oktoberfest",
+            "Christmas",
+            "Karneval"
+        ],
+        "foods": [
+            "Bratwurst",
+            "Sauerkraut",
+            "Schnitzel"
+        ],
+        "greetings": [
+            "Hallo",
+            "Guten Tag",
+            "Wie geht's?"
+        ],
+        "values": [
+            "Punctuality",
+            "Efficiency",
+            "Directness"
+        ],
+        "words_to_learn": [
+            {
+                "word": "Hallo",
+                "meaning": "Hello"
+            },
+            {
+                "word": "Danke schön",
+                "meaning": "Thank you"
+            },
+            {
+                "word": "Entschuldigung",
+                "meaning": "Excuse me"
+            },
+            {
+                "word": "Guten Appetit",
+                "meaning": "An expression of gratitude for the meal you’re about to eat"
+            },
+            {
+                "word": "Nach Empfehlung des Kochs",
+                "meaning": "Used to order chef’s recommendation (often for sushi)"
+            },
+            {
+                "word": "Alkohol",
+                "meaning": "General term for alcohol"
+            },
+            {
+                "word": "Jägermeister",
+                "meaning": "Jägermeister"
+            },
+            {
+                "word": "Nichtraucherplatz",
+                "meaning": "Non-smoking seat"
+            },
+            {
+                "word": "__ bitte",
+                "meaning": "I would like __, please"
+            },
+            {
+                "word": "Wo ist __?",
+                "meaning": "Where is __?"
+            },
+            {
+                "word": "Wie spät ist es jetzt?",
+                "meaning": "What time is it now?"
+            },
+            {
+                "word": "Um wie viel Uhr?",
+                "meaning": "At what time?"
+            },
+            {
+                "word": "Morgen",
+                "meaning": "Morning"
+            },
+            {
+                "word": "Heute",
+                "meaning": "Today"
+            },
+            {
+                "word": "Morgen",
+                "meaning": "Tomorrow"
+            },
+            {
+                "word": "Ich möchte nach __ gehen",
+                "meaning": "I want to go to __"
+            },
+            {
+                "word": "Halten Sie bitte an",
+                "meaning": "Stop, please"
+            },
+            {
+                "word": "Fahrkarte",
+                "meaning": "Ticket"
+            },
+            {
+                "word": "Schnellzug",
+                "meaning": "Bullet train"
+            },
+            {
+                "word": "Welcher Zug?",
+                "meaning": "Which train?"
+            }
+        ]
     }
 }
