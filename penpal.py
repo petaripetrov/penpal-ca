@@ -49,17 +49,18 @@ class CulturalPenPal:
         self.persistence_dir = Path(persistence_dir)
         self.persistence_dir.mkdir(exist_ok=True)
         
-        self.culture_profiles = json.load(open("culture_profiles.json"))
+        with open("cultures/culture_profiles.json") as f:
+            self.culture_profiles = json.load(f)
         
         # Initialize memory storage for each culture
         self.memory_files = {}
         self.conversation_log_files = {}
         self.vector_stores = {}
         
-        for culture in self.culture_profiles:
-            culture_name = self.culture_profiles[culture]["name"]
-            self.memory_files[culture] = self.persistence_dir / f"{culture_name.lower()}_memory.json"
-            self.conversation_log_files[culture] = self.persistence_dir / f"{culture_name.lower()}_conversations.txt"
+        for profile in self.culture_profiles:
+            culture_name = self.culture_profiles[profile]["name"]
+            self.memory_files[profile] = self.persistence_dir / f"{culture_name.lower()}_memory.json"
+            self.conversation_log_files[profile] = self.persistence_dir / f"{culture_name.lower()}_conversations.txt"
         
         # Set up short-term memories
         self.short_term_memory = ConversationBufferMemory(
@@ -67,19 +68,19 @@ class CulturalPenPal:
             return_messages=True
         )
         
-        self.long_term_summary_memory = ConversationSummaryBufferMemory(
-            llm=self.llm,
-            max_token_limit=500,
+        self.long_term_memory = ConversationBufferMemory(
             memory_key="long_term_memory",
             return_messages=True
         )
         
-        self.knowledge = {}
-        for culture in self.culture_profiles:
-            self.knowledge[culture] = self._load_knowledge(culture)
+        self.load_long_term_memory(culture)
         
-        for culture in self.culture_profiles:
-            self.vector_stores[culture] = self._initialize_vector_store(culture)
+        self.knowledge = {}
+        for profile in self.culture_profiles:
+            self.knowledge[profile] = self._load_knowledge(profile)
+        
+        for profile in self.culture_profiles:
+            self.vector_stores[profile] = self._initialize_vector_store(profile)
         
         self.setup_conversation_chain()
         
@@ -190,13 +191,12 @@ class CulturalPenPal:
                 return_messages=True
             )
             
-            # Set up long-term summarized memory for the new personality
-            self.long_term_summary_memory = ConversationSummaryBufferMemory(
-                llm=self.llm,
-                max_token_limit=500,
+            self.long_term_memory = ConversationBufferMemory(
                 memory_key="long_term_memory",
                 return_messages=True
             )
+
+            self.load_long_term_memory(new_culture)
             
             return f"Hello! I'm {self.name}, your {new_culture} cultural pen pal. I'll be speaking in {profile['language']} from now on. How can I help you today?"
         else:
@@ -254,6 +254,12 @@ class CulturalPenPal:
         response = ''.join(char for char in response if ord(char) < 65536)
         
         return response.strip()
+    
+    def load_long_term_memory(self, culture):
+        with open(f"cultures/{culture}.txt", 'r', encoding='utf-8') as f:
+            for line in f:
+                country, relation, abstract = line.split("\t")
+                self.long_term_memory.save_context({"input": f"{country} {relation}:"}, {'output': abstract})
     
     def add_to_short_term_memory(self, user_input, response):
         """Add the current interaction to long-term memory storage"""
@@ -432,7 +438,7 @@ class CulturalPenPal:
                 raw_response = self.chain.invoke({
                     "input": user_input,
                     "short_term_memory": self.short_term_memory.buffer,
-                    "long_term_memory": self.long_term_summary_memory.buffer
+                    "long_term_memory": self.long_term_memory.buffer
                 })
                 
                 clean_response = self.clean_response(raw_response)
