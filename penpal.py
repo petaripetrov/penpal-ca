@@ -182,7 +182,6 @@ class CulturalPenPal:
             self.current_culture = new_culture
             profile = self.culture_profiles[new_culture]
             self.name = profile["name"]
-            self.current_language = profile["language"]
             self.setup_conversation_chain()
             
             # Reset short-term memory for the new personality
