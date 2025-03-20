@@ -249,6 +249,8 @@ class CulturalPenPal:
         # Remove prefixes like "AI:", "Assistant:", "[Name]:"
         response = re.sub(r"^(AI:|Assistant:|Claude:|"+self.name+r":|Human:)\s*", "", response)
         
+        response = re.sub(r"\*+.+\*", "", response) # for now just remove the emotional qualifiers
+        
         # Remove any potential problematic characters for TTS
         response = ''.join(char for char in response if ord(char) < 65536)
         
@@ -264,7 +266,6 @@ class CulturalPenPal:
         """Add the current interaction to long-term memory storage"""
         # Save to memory (for the time being long and short term memory behave the same way)
         self.short_term_memory.save_context({"input": user_input}, {"output": response})
-        self.long_term_summary_memory.save_context({"input": user_input}, {"output": response})
         
         # Log conversation
         timestamp = datetime.now().isoformat()
