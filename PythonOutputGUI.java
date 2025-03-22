@@ -63,36 +63,67 @@ public class PythonOutputGUI {
         // Button actions
         startButton.addActionListener(e -> startPythonScript());
         pauseButton.addActionListener(e -> togglePauseResume());
-        stopButton.addActionListener(e -> stopPythonScript());
+        // stopButton.addActionListener(e -> stopPythonScript());
+        stopButton.addActionListener(e -> sendToPython("EXIT"));
         sendButton.addActionListener(e -> sendTextInputToPython());
-        // startAudioButton.addActionListener(e -> sendToPython("START_AUDIO"));
+        startAudioButton.addActionListener(e -> sendToPython("START_AUDIO"));
 
 
         frame.setVisible(true);
     }
 
+    // private void startPythonScript() {
+    //     try {
+    //         ProcessBuilder pb = new ProcessBuilder("python3", "-u", "CA/penpal-ca/penpal.py");
+    //         process = pb.start();
+
+    //         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+    //         pythonWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+
+    //         new Thread(() -> {
+    //             String line;
+    //             try {
+    //                 while ((line = reader.readLine()) != null) {
+    //                     textArea.append(line + "\n");
+    //                 }
+    //             } catch (Exception ex) {
+    //                 ex.printStackTrace();
+    //             }
+    //         }).start();
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+    // }
+
     private void startPythonScript() {
         try {
-            ProcessBuilder pb = new ProcessBuilder("python3", "-u", "script.py");
+            ProcessBuilder pb = new ProcessBuilder("python3", "-u", "penpal.py"); // Ensure unbuffered output
+            pb.redirectErrorStream(true);  // Merge stderr with stdout
             process = pb.start();
-
+            System.out.println("Process started with PID: " + process.pid());
+    
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             pythonWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-
+    
+            // Read output in a separate thread
             new Thread(() -> {
                 String line;
                 try {
                     while ((line = reader.readLine()) != null) {
-                        textArea.append(line + "\n");
+                        String finalLine = line;
+                        System.out.println("Python Output: " + line); // Debug output
+                        SwingUtilities.invokeLater(() -> textArea.append(finalLine + "\n")); // Ensure safe UI updates
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }).start();
+    
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    
 
     private void sendToPython(String message) {
         try {
