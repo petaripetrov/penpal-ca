@@ -19,6 +19,8 @@ from langchain_community.document_loaders import TextLoader
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferMemory, ConversationSummaryBufferMemory
 
+sys.stderr = open("debug.log", "w")
+
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
                  model_name="llama2", 
@@ -291,7 +293,7 @@ class CulturalPenPal:
         try:
             # Always use English for speech recognition unless explicitly toggled
             user_input = recognizer.recognize_google(audio, language=self.speech_recognition_language)
-            print(f"You said: {user_input}")
+            print(f"You said: {user_input}", flush=True)
             return user_input
         except sr.UnknownValueError:
             print("Sorry, I could not understand the audio.")
@@ -458,28 +460,31 @@ class CulturalPenPal:
     def converse(self):
         """Modified function to handle conversation from Java commands."""
         greeting = f"Hello! I'm {self.name}, your {self.current_culture} cultural pen pal."
-        print(f"{self.name}: {greeting}")
+        print(f"{self.name}: {greeting}", flush=True)
         self.speak_output(greeting)
 
         while True:
             try:
                 # Read input from Java (stdin)
-                java_input = sys.stdin.readline().strip()  
+                java_input = sys.stdin.readline().strip()
                 
                 if not java_input:
                     continue  # Ignore empty input
                 
-                if java_input == "EXIT":
+                if java_input.lower() == "exit":
                     farewell = f"It was nice talking with you! Goodbye!"
-                    print(f"{self.name}: {farewell}")
-                    sys.stdout.flush()
+                    print(f"{self.name}: {farewell}", flush=True)
                     self.speak_output(farewell)
+
+                    print("Exiting conversation...", flush=True)
                     break  # Stop the loop
                 
                 elif java_input == "START_AUDIO":
                     user_input = self.listen_for_input()  # Capture speech input
                 else:
                     user_input = java_input  # If Java sends text, use it directly
+                    print(f"You said: {user_input}", flush=True)
+
                 
                 if user_input.lower() == "use text":
                     self.use_speech = False
@@ -503,14 +508,12 @@ class CulturalPenPal:
                 self.speak_output(clean_response)
 
             except KeyboardInterrupt:
-                print("\nEnding conversation...", flush=True)
-                sys.stdout.flush()
+                print("\nEnding conversation...", file=sys.stderr, flush=True)
                 break
             except Exception as e:
-                print(f"Error: {str(e)}", flush=True)
+                print(f"Error: {str(e)}", file=sys.stderr, flush=True)
                 err_msg = "I'm having some technical difficulties. Let's try again."
                 print(f"{self.name}: {err_msg}", flush=True)
-                sys.stdout.flush()
                 self.speak_output(err_msg)
 
 if __name__ == "__main__":
@@ -524,3 +527,6 @@ if __name__ == "__main__":
     
     # Start the conversation
     pen_pal.converse()
+
+    print("Cultural PenPal has ended.", flush=True)
+    sys.stdout.flush() 

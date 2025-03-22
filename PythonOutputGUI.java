@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class PythonOutputGUI {
     private JTextArea textArea;
@@ -10,13 +12,15 @@ public class PythonOutputGUI {
     private JButton sendButton, startAudioButton, stopButton;
     private boolean isPaused = false;
     private BufferedWriter pythonWriter;
+    private BufferedReader pythonReader;
     private JTextField inputField;
+    private boolean conversationRunning = false;
 
     public PythonOutputGUI() {
         // Create main frame
         JFrame frame = new JFrame("PenPal GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 400);
+        frame.setSize(800, 600);
         frame.setLayout(new BorderLayout());
 
         // Left panel
@@ -63,64 +67,52 @@ public class PythonOutputGUI {
         // Button actions
         startButton.addActionListener(e -> startPythonScript());
         pauseButton.addActionListener(e -> togglePauseResume());
-        // stopButton.addActionListener(e -> stopPythonScript());
-        stopButton.addActionListener(e -> sendToPython("EXIT"));
+        stopButton.addActionListener(e -> stopPythonScript());
         sendButton.addActionListener(e -> sendTextInputToPython());
+        // stopButton.addActionListener(e -> sendToPython("EXIT"));
         startAudioButton.addActionListener(e -> sendToPython("START_AUDIO"));
-
+        
+         frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                stopPythonScript(); 
+            }
+        });
 
         frame.setVisible(true);
     }
 
-    // private void startPythonScript() {
-    //     try {
-    //         ProcessBuilder pb = new ProcessBuilder("python3", "-u", "CA/penpal-ca/penpal.py");
-    //         process = pb.start();
-
-    //         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-    //         pythonWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-
-    //         new Thread(() -> {
-    //             String line;
-    //             try {
-    //                 while ((line = reader.readLine()) != null) {
-    //                     textArea.append(line + "\n");
-    //                 }
-    //             } catch (Exception ex) {
-    //                 ex.printStackTrace();
-    //             }
-    //         }).start();
-    //     } catch (Exception e) {
-    //         e.printStackTrace();
-    //     }
-    // }
 
     private void startPythonScript() {
+        textArea.setText("");
         try {
             ProcessBuilder pb = new ProcessBuilder("python3", "-u", "penpal.py"); // Ensure unbuffered output
             pb.redirectErrorStream(true);  // Merge stderr with stdout
             process = pb.start();
             System.out.println("Process started with PID: " + process.pid());
+            conversationRunning = true;
     
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            pythonReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             pythonWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
     
             // Read output in a separate thread
             new Thread(() -> {
                 String line;
                 try {
-                    while ((line = reader.readLine()) != null) {
+                    while ((line = pythonReader.readLine()) != null) {
                         String finalLine = line;
                         System.out.println("Python Output: " + line); // Debug output
                         SwingUtilities.invokeLater(() -> textArea.append(finalLine + "\n")); // Ensure safe UI updates
                     }
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    if (conversationRunning) {
+                        System.err.println("Error: Unable to read from Python process. The stream may be closed.");
+                    }
                 }
             }).start();
     
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error: Unable to start Python process.");
         }
     }
     
@@ -132,7 +124,7 @@ public class PythonOutputGUI {
                 pythonWriter.flush();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error: Unable to send message to Python process. The stream may be closed.");
         }
     }
 
@@ -146,7 +138,7 @@ public class PythonOutputGUI {
                     inputField.setText(""); // Clear input field after sending
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error: Unable to send user input to Python process. The stream may be closed.");
             }
         }
     }
@@ -163,18 +155,56 @@ public class PythonOutputGUI {
                 }
                 isPaused = !isPaused;
             } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }
 
     private void stopPythonScript() {
         if (process != null) {
-            process.destroy();
-            textArea.append("\n Conversation Ended\n");
+            try {
+                // Send the EXIT command to the Python script
+                if (pythonWriter != null) {
+                    sendToPython("EXIT");
+                    pythonWriter.close(); // Close the writer
+                    System.out.println("Writer closed\n");
+                }
+    
+                // Wait for the process to terminate
+                process.waitFor();
+    
+            } catch (IOException e) {
+                System.err.println("Error: Unable to close the writer or send the EXIT command.");
+            } catch (InterruptedException e) {
+                System.err.println("Error: Interrupted while waiting for the Python process to terminate.");
+            } finally {
+                // Destroy the process if it hasn't terminated
+                if (process.isAlive()) {
+                    process.destroy();
+                }
+    
+                // Close the reader and process streams
+                try {
+                    if (pythonReader != null) {
+                        pythonReader.close(); // Close the reader
+                        System.out.println("Reader closed\n");
+                    }
+                    if (process.getInputStream() != null) {
+                        process.getInputStream().close();
+                    }
+                    if (process.getErrorStream() != null) {
+                        process.getErrorStream().close();
+                    }
+                    if (process.getOutputStream() != null) {
+                        process.getOutputStream().close();
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error: Unable to close process streams.");
+                }
+    
+                textArea.append("\nConversation Ended\n");
+            }
         }
     }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(PythonOutputGUI::new);
     }
