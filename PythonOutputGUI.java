@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.util.HashMap;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -15,8 +16,54 @@ public class PythonOutputGUI {
     private BufferedReader pythonReader;
     private JTextField inputField;
     private boolean conversationRunning = false;
+    private String selectedLanguage = "English"; // Default language
+    private HashMap<String, String> cultureProfiles;
 
     public PythonOutputGUI() {
+        initializeLanguageToNameMap();
+        showInitGUI();
+    }
+
+    private void initializeLanguageToNameMap() {
+        // We could read this from the .json file but then you need Maven to build the project with Gson dependency
+        // Im not assuming that we all have this so I hardcoded the values
+        cultureProfiles = new HashMap<>();
+        cultureProfiles.put("American", "Aria");
+        cultureProfiles.put("French", "Sophie");
+        cultureProfiles.put("Spanish", "Elena");
+        cultureProfiles.put("German", "Hannah");
+        cultureProfiles.put("Japanese", "Hana");
+    }
+
+    private void showInitGUI() { // language selection frame
+        JFrame languageFrame = new JFrame("PenPal GUI");
+        languageFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        languageFrame.setSize(400, 200);
+        languageFrame.setLayout(new BorderLayout());
+
+        String[] languages = { "English", "French", "Spanish", "German", "Japanese" };
+        JComboBox<String> languageDropdown = new JComboBox<>(languages);
+
+        JButton startButton = new JButton("Start");
+
+        startButton.addActionListener(e -> {
+            selectedLanguage = (String) languageDropdown.getSelectedItem(); 
+            languageFrame.dispose();
+            startMainGUI();
+        });
+
+        // Add components to the frame
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Select a language:"));
+        panel.add(languageDropdown);
+        panel.add(startButton);
+
+        languageFrame.add(panel, BorderLayout.CENTER);
+        languageFrame.setLocationRelativeTo(null);
+        languageFrame.setVisible(true);
+    }
+
+    private void startMainGUI() {
         // Create main frame
         JFrame frame = new JFrame("PenPal GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -27,9 +74,9 @@ public class PythonOutputGUI {
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setPreferredSize(new Dimension(200, 400));
-
-        JLabel nameLabel = new JLabel("Name: User"); // add the CA name here
-        JLabel languageLabel = new JLabel("Language: English"); // same here for language
+        
+        JLabel nameLabel = new JLabel("Name: " + cultureProfiles.get(this.selectedLanguage)); 
+        JLabel languageLabel = new JLabel("Language: " + this.selectedLanguage); 
         startButton = new JButton("Start Conversation");
         pauseButton = new JButton("Pause Conversation");
         stopButton = new JButton("Stop Conversation");
@@ -37,11 +84,11 @@ public class PythonOutputGUI {
 
         leftPanel.add(nameLabel);
         leftPanel.add(languageLabel);
-        leftPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Spacer
+        leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         leftPanel.add(startButton);
         leftPanel.add(pauseButton);
         leftPanel.add(stopButton);
-        leftPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Spacer
+        leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         leftPanel.add(startAudioButton);
 
         // Right panel (Output area)
@@ -69,33 +116,31 @@ public class PythonOutputGUI {
         pauseButton.addActionListener(e -> togglePauseResume());
         stopButton.addActionListener(e -> stopPythonScript());
         sendButton.addActionListener(e -> sendTextInputToPython());
-        // stopButton.addActionListener(e -> sendToPython("EXIT"));
         startAudioButton.addActionListener(e -> sendToPython("START_AUDIO"));
-        
-         frame.addWindowListener(new WindowAdapter() {
+
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                stopPythonScript(); 
+                stopPythonScript();
             }
         });
-
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
-
 
     private void startPythonScript() {
         textArea.setText("");
         try {
-            ProcessBuilder pb = new ProcessBuilder("python3", "-u", "penpal.py"); // Ensure unbuffered output
-            // pb.redirectErrorStream(true);  // Merge stderr with stdout
+            ProcessBuilder pb = new ProcessBuilder("python3", "-u", "penpal.py", this.selectedLanguage, this.cultureProfiles.get(this.selectedLanguage)); // Ensure unbuffered output
+            // pb.redirectErrorStream(true); // Merge stderr with stdout
             process = pb.start();
             System.out.println("Process started with PID: " + process.pid());
             conversationRunning = true;
-    
+
             pythonReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             pythonWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-    
+
             // Read output in a separate thread
             new Thread(() -> {
                 String line;
@@ -111,8 +156,8 @@ public class PythonOutputGUI {
                     }
                 }
             }).start();
-    
-              // Read stderr in a separate thread and print to the terminal
+
+            // Read stderr in a separate thread and print to the terminal
             new Thread(() -> {
                 String line;
                 try {
@@ -128,7 +173,6 @@ public class PythonOutputGUI {
             System.err.println("Error: Unable to start Python process.");
         }
     }
-    
 
     private void sendToPython(String message) {
         try {
@@ -160,10 +204,10 @@ public class PythonOutputGUI {
         if (process != null) {
             try {
                 if (isPaused) {
-                    Runtime.getRuntime().exec(new String[]{"sh", "-c", "kill -CONT " + process.pid()});
+                    Runtime.getRuntime().exec(new String[] { "sh", "-c", "kill -CONT " + process.pid() });
                     pauseButton.setText("Pause Conversation");
                 } else {
-                    Runtime.getRuntime().exec(new String[]{"sh", "-c", "kill -STOP " + process.pid()});
+                    Runtime.getRuntime().exec(new String[] { "sh", "-c", "kill -STOP " + process.pid() });
                     pauseButton.setText("Resume Conversation");
                 }
                 isPaused = !isPaused;
@@ -181,10 +225,10 @@ public class PythonOutputGUI {
                     pythonWriter.close(); // Close the writer
                     System.out.println("Writer closed\n");
                 }
-    
+
                 // Wait for the process to terminate
                 process.waitFor();
-    
+
             } catch (IOException e) {
                 System.err.println("Error: Unable to close the writer or send the EXIT command.");
             } catch (InterruptedException e) {
@@ -194,7 +238,7 @@ public class PythonOutputGUI {
                 if (process.isAlive()) {
                     process.destroy();
                 }
-    
+
                 // Close the reader and process streams
                 try {
                     if (pythonReader != null) {
@@ -213,11 +257,12 @@ public class PythonOutputGUI {
                 } catch (IOException e) {
                     System.err.println("Error: Unable to close process streams.");
                 }
-    
+
                 textArea.append("\nConversation Ended\n");
             }
         }
     }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(PythonOutputGUI::new);
     }

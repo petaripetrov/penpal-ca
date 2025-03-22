@@ -517,11 +517,20 @@ class CulturalPenPal:
                 self.speak_output(err_msg)
 
 if __name__ == "__main__":
+    # grab sys args from the GUI
+    if len(sys.argv) > 1:
+        selected_language = sys.argv[1] 
+        user_name = sys.argv[2] if len(sys.argv) > 2 else "Default Name"
+    else:
+        # default values
+        selected_language = "American"
+        user_name = "Aria"
+
     print("Starting Cultural PenPal...", flush=True)
     # Create a cultural pen pal instance
     pen_pal = CulturalPenPal(
-        name="Aria",
-        culture="American",
+        name=user_name,
+        culture=selected_language,
         model_name="llama2" # TODO maybe introduce a CLI flag for easy model switching
     )
     
