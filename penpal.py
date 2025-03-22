@@ -209,9 +209,9 @@ class CulturalPenPal:
         profile = self.culture_profiles[self.current_culture]
         
         if self.use_memory:
-            return profile['words_to_learn'][:10]
+            return '\n'.join([pair['word'] + ':' + pair['meaning'] for pair in profile['words_to_learn'][:10]])
         else:
-            return profile['words_to_learn'][10:]            
+            return '\n'.join([pair['word'] + ':' + pair['meaning'] for pair in profile['words_to_learn'][10:]])            
     
     def setup_conversation_chain(self):
         """Set up the LangChain conversation chain with the system prompt"""
