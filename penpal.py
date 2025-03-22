@@ -86,8 +86,8 @@ class CulturalPenPal:
         self.setup_conversation_chain()
         
         # Initialize pygame for audio playback
-        pygame.mixer.init()
-        print(f"{self.name} is ready to converse! Say or type 'exit' to end the conversation.")
+        pygame.init()
+        print(f"{self.name} is ready to converse! Say or type 'exit' to end the conversation.", flush=True)
         
     def _load_knowledge(self, culture):
         """Load the pen pal's knowledge from file or initialize if not exists"""

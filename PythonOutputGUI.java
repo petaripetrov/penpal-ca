@@ -87,13 +87,14 @@ public class PythonOutputGUI {
         textArea.setText("");
         try {
             ProcessBuilder pb = new ProcessBuilder("python3", "-u", "penpal.py"); // Ensure unbuffered output
-            pb.redirectErrorStream(true);  // Merge stderr with stdout
+            // pb.redirectErrorStream(true);  // Merge stderr with stdout
             process = pb.start();
             System.out.println("Process started with PID: " + process.pid());
             conversationRunning = true;
     
             pythonReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             pythonWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
     
             // Read output in a separate thread
             new Thread(() -> {
@@ -111,6 +112,18 @@ public class PythonOutputGUI {
                 }
             }).start();
     
+              // Read stderr in a separate thread and print to the terminal
+            new Thread(() -> {
+                String line;
+                try {
+                    while ((line = errorReader.readLine()) != null) {
+                        System.err.println("Python Error: " + line); // Print stderr to the terminal
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Error: Unable to read from Python process stderr. The stream may be closed.");
+                }
+            }).start();
+
         } catch (Exception e) {
             System.err.println("Error: Unable to start Python process.");
         }
