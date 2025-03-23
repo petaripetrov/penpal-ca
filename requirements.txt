@@ -15,8 +15,3 @@ PyAudio>=0.2.14
 # Embedding and vector database
 sentence-transformers>=3.4.1
 chromadb>=0.6.3
-
-# File handling and utilities
-# pathlib>=1.0.1
-# codecs>=1.15.0
-
