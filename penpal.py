@@ -1,4 +1,8 @@
 import os
+
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
 import re  
 import json
 import time
@@ -20,6 +24,8 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferMemory, ConversationSummaryBufferMemory
 
 sys.stderr = open("debug.log", "w")
+
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 

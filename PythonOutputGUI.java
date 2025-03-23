@@ -41,7 +41,7 @@ public class PythonOutputGUI {
         languageFrame.setSize(400, 200);
         languageFrame.setLayout(new BorderLayout());
 
-        String[] languages = { "English", "French", "Spanish", "German", "Japanese" };
+        String[] languages = { "French", "Spanish", "German", "Japanese" };
         JComboBox<String> languageDropdown = new JComboBox<>(languages);
 
         JButton startButton = new JButton("Start");
@@ -131,7 +131,7 @@ public class PythonOutputGUI {
     private void startPythonScript() {
         textArea.setText("");
         try {
-            ProcessBuilder pb = new ProcessBuilder("python3", "-u", "penpal.py", this.selectedLanguage, this.cultureProfiles.get(this.selectedLanguage)); // Ensure unbuffered output
+            ProcessBuilder pb = new ProcessBuilder("python", "-u", "penpal.py", this.selectedLanguage, this.cultureProfiles.get(this.selectedLanguage)); // Ensure unbuffered output
             // pb.redirectErrorStream(true); // Merge stderr with stdout
             process = pb.start();
             System.out.println("Process started with PID: " + process.pid());
