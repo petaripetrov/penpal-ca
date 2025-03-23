@@ -218,9 +218,7 @@ class CulturalPenPal:
     def setup_conversation_chain(self):
         """Set up the LangChain conversation chain with the system prompt"""
         profile = self.culture_profiles[self.current_culture]
-        
-        print(self.get_learnable_words())
-        
+                
         system_template = f"""
         You are {self.name}, a cultural pen pal and language tutor from {self.current_culture} culture.
         
