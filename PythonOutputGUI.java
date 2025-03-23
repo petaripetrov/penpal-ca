@@ -18,6 +18,9 @@ public class PythonOutputGUI {
     private boolean conversationRunning = false;
     private String selectedLanguage = "English"; // Default language
     private HashMap<String, String> cultureProfiles;
+    private Thread stdoutThread;
+    private Thread stderrThread;
+
 
     public PythonOutputGUI() {
         initializeLanguageToNameMap();
@@ -41,7 +44,7 @@ public class PythonOutputGUI {
         languageFrame.setSize(400, 200);
         languageFrame.setLayout(new BorderLayout());
 
-        String[] languages = { "English", "French", "Spanish", "German", "Japanese" };
+        String[] languages = {"French", "Spanish", "German", "Japanese"}; // no english
         JComboBox<String> languageDropdown = new JComboBox<>(languages);
 
         JButton startButton = new JButton("Start");
@@ -52,7 +55,6 @@ public class PythonOutputGUI {
             startMainGUI();
         });
 
-        // Add components to the frame
         JPanel panel = new JPanel();
         panel.add(new JLabel("Select a language:"));
         panel.add(languageDropdown);
@@ -106,7 +108,6 @@ public class PythonOutputGUI {
         inputPanel.add(inputField, BorderLayout.CENTER);
         inputPanel.add(sendButton, BorderLayout.EAST);
 
-        // Add panels to frame
         frame.add(leftPanel, BorderLayout.WEST);
         frame.add(scrollPane, BorderLayout.CENTER);
         frame.add(inputPanel, BorderLayout.SOUTH);
@@ -129,9 +130,25 @@ public class PythonOutputGUI {
     }
 
     private void startPythonScript() {
+        if (conversationRunning) {
+            textArea.append("Conversation already running. Button is disabled. Please stop the current conversation first.\n");
+            return;
+        }
+
         textArea.setText("");
+
         try {
-            ProcessBuilder pb = new ProcessBuilder("python3", "-u", "penpal.py", this.selectedLanguage, this.cultureProfiles.get(this.selectedLanguage)); // Ensure unbuffered output
+
+            // // Determine the correct Python command based on the operating system
+            // String pythonCommand;
+            // String osName = System.getProperty("os.name").toLowerCase();
+            // if (osName.contains("win")) {
+            //     pythonCommand = "python";
+            // } else {
+            //     pythonCommand = "python3";
+            // }
+
+            ProcessBuilder pb = new ProcessBuilder("python", "-u", "penpal.py", this.selectedLanguage, this.cultureProfiles.get(this.selectedLanguage)); // Ensure unbuffered output
             // pb.redirectErrorStream(true); // Merge stderr with stdout
             process = pb.start();
             System.out.println("Process started with PID: " + process.pid());
@@ -142,7 +159,7 @@ public class PythonOutputGUI {
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
             // Read output in a separate thread
-            new Thread(() -> {
+            stdoutThread = new Thread(() -> {
                 String line;
                 try {
                     while ((line = pythonReader.readLine()) != null) {
@@ -155,10 +172,11 @@ public class PythonOutputGUI {
                         System.err.println("Error: Unable to read from Python process. The stream may be closed.");
                     }
                 }
-            }).start();
+            });
+            stdoutThread.start();
 
             // Read stderr in a separate thread and print to the terminal
-            new Thread(() -> {
+            stderrThread = new Thread(() -> {
                 String line;
                 try {
                     while ((line = errorReader.readLine()) != null) {
@@ -167,7 +185,8 @@ public class PythonOutputGUI {
                 } catch (Exception ex) {
                     System.err.println("Error: Unable to read from Python process stderr. The stream may be closed.");
                 }
-            }).start();
+            });
+            stderrThread.start();
 
         } catch (Exception e) {
             System.err.println("Error: Unable to start Python process.");
@@ -238,6 +257,25 @@ public class PythonOutputGUI {
                 if (process.isAlive()) {
                     process.destroy();
                 }
+            
+             // Interrupt and join the threads
+            if (stdoutThread != null && stdoutThread.isAlive()) {
+                stdoutThread.interrupt();
+                try {
+                    stdoutThread.join(); // Wait for the thread to finish
+                } catch (InterruptedException e) {
+                    System.err.println("Error: Interrupted while waiting for stdout thread to finish.");
+                }
+            }
+
+            if (stderrThread != null && stderrThread.isAlive()) {
+                stderrThread.interrupt();
+                try {
+                    stderrThread.join(); // Wait for the thread to finish
+                } catch (InterruptedException e) {
+                    System.err.println("Error: Interrupted while waiting for stderr thread to finish.");
+                }
+            }
 
                 // Close the reader and process streams
                 try {
@@ -261,6 +299,7 @@ public class PythonOutputGUI {
                 textArea.append("\nConversation Ended\n");
             }
         }
+        conversationRunning = false;
     }
 
     public static void main(String[] args) {
