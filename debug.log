@@ -1,4 +1,2 @@
-/Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py:67: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
-  self.short_term_memory = ConversationBufferMemory(
 /Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py:72: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
-  self.long_term_summary_memory = ConversationSummaryBufferMemory(
+  self.short_term_memory = ConversationBufferMemory(

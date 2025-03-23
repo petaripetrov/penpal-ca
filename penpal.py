@@ -8,6 +8,7 @@ import json
 import time
 import codecs
 import sys
+import random
 import pygame
 import speech_recognition as sr
 
@@ -29,7 +30,7 @@ environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
-                 model_name="llama2", 
+                 model_name="llama2", use_memory=True,
                  persistence_dir="pen_pal_data"):
         """
         Initialize the Cultural Pen Pal agent with free language models.
@@ -40,10 +41,13 @@ class CulturalPenPal:
             model_name (str): The local model to use with Ollama (e.g., 'llama2', 'mistral', 'phi')
             persistence_dir (str): Directory to store persistent memory
         """
+        random.seed(42)
+        
         self.name = name
         self.default_culture = culture
         self.current_culture = culture
         self.current_language = "english"
+        self.use_memory = use_memory
         
         self.speech_recognition_language = "en-US"
         self.use_speech = False
@@ -57,17 +61,18 @@ class CulturalPenPal:
         self.persistence_dir = Path(persistence_dir)
         self.persistence_dir.mkdir(exist_ok=True)
         
-        self.culture_profiles = json.load(open("culture_profiles.json"))
+        with open("cultures/culture_profiles.json") as f:
+            self.culture_profiles = json.load(f)
         
         # Initialize memory storage for each culture
         self.memory_files = {}
         self.conversation_log_files = {}
         self.vector_stores = {}
         
-        for culture in self.culture_profiles:
-            culture_name = self.culture_profiles[culture]["name"]
-            self.memory_files[culture] = self.persistence_dir / f"{culture_name.lower()}_memory.json"
-            self.conversation_log_files[culture] = self.persistence_dir / f"{culture_name.lower()}_conversations.txt"
+        for profile in self.culture_profiles:
+            culture_name = self.culture_profiles[profile]["name"]
+            self.memory_files[profile] = self.persistence_dir / f"{culture_name.lower()}_memory.json"
+            self.conversation_log_files[profile] = self.persistence_dir / f"{culture_name.lower()}_conversations.txt"
         
         # Set up short-term memories
         self.short_term_memory = ConversationBufferMemory(
@@ -75,19 +80,19 @@ class CulturalPenPal:
             return_messages=True
         )
         
-        self.long_term_summary_memory = ConversationSummaryBufferMemory(
-            llm=self.llm,
-            max_token_limit=500,
+        self.long_term_memory = ConversationBufferMemory(
             memory_key="long_term_memory",
             return_messages=True
         )
         
-        self.knowledge = {}
-        for culture in self.culture_profiles:
-            self.knowledge[culture] = self._load_knowledge(culture)
+        self.load_long_term_memory(culture)
         
-        for culture in self.culture_profiles:
-            self.vector_stores[culture] = self._initialize_vector_store(culture)
+        self.knowledge = {}
+        for profile in self.culture_profiles:
+            self.knowledge[profile] = self._load_knowledge(profile)
+        
+        for profile in self.culture_profiles:
+            self.vector_stores[profile] = self._initialize_vector_store(profile)
         
         self.setup_conversation_chain()
         
@@ -189,7 +194,6 @@ class CulturalPenPal:
             self.current_culture = new_culture
             profile = self.culture_profiles[new_culture]
             self.name = profile["name"]
-            self.current_language = profile["language"]
             self.setup_conversation_chain()
             
             # Reset short-term memory for the new personality
@@ -198,25 +202,29 @@ class CulturalPenPal:
                 return_messages=True
             )
             
-            # Set up long-term summarized memory for the new personality
-            self.long_term_summary_memory = ConversationSummaryBufferMemory(
-                llm=self.llm,
-                max_token_limit=500,
+            self.long_term_memory = ConversationBufferMemory(
                 memory_key="long_term_memory",
                 return_messages=True
             )
+
+            self.load_long_term_memory(new_culture)
             
             return f"Hello! I'm {self.name}, your {new_culture} cultural pen pal. I'll be speaking in {profile['language']} from now on. How can I help you today?"
         else:
             return f"I'm sorry, I don't have information about {new_culture} culture. I'll continue as {self.name} from {self.current_culture} culture."
     
     def get_learnable_words(self):
-        return [] # todo populate
+        profile = self.culture_profiles[self.current_culture]
+        
+        if self.use_memory:
+            return '\n'.join([pair['word'] + ':' + pair['meaning'] for pair in profile['words_to_learn'][:10]])
+        else:
+            return '\n'.join([pair['word'] + ':' + pair['meaning'] for pair in profile['words_to_learn'][10:]])            
     
     def setup_conversation_chain(self):
         """Set up the LangChain conversation chain with the system prompt"""
         profile = self.culture_profiles[self.current_culture]
-        
+                
         system_template = f"""
         You are {self.name}, a cultural pen pal and language tutor from {self.current_culture} culture.
         
@@ -258,16 +266,27 @@ class CulturalPenPal:
         # Remove prefixes like "AI:", "Assistant:", "[Name]:"
         response = re.sub(r"^(AI:|Assistant:|Claude:|"+self.name+r":|Human:)\s*", "", response)
         
+        response = re.sub(r"\*+.+\*", "", response) # for now just remove the emotional qualifiers
+        
         # Remove any potential problematic characters for TTS
         response = ''.join(char for char in response if ord(char) < 65536)
         
         return response.strip()
     
+    def load_long_term_memory(self, culture):
+        """Load cultural information into short-term memory"""
+        if not self.use_memory: return
+        
+        with open(f"cultures/{culture}.txt", 'r', encoding='utf-8') as f:
+            for line in f:
+                country, relation, abstract = line.split("\t")
+                self.long_term_memory.save_context({"input": f"{country} {relation}:"}, {'output': abstract})
+    
     def add_to_short_term_memory(self, user_input, response):
-        """Add the current interaction to long-term memory storage"""
+        """Add the current interaction to short-term memory storage"""
+        if not self.use_memory: return
         # Save to memory (for the time being long and short term memory behave the same way)
         self.short_term_memory.save_context({"input": user_input}, {"output": response})
-        self.long_term_summary_memory.save_context({"input": user_input}, {"output": response})
         
         # Log conversation
         timestamp = datetime.now().isoformat()
@@ -392,76 +411,6 @@ class CulturalPenPal:
                     return language_to_culture[requested_language]
         
         return None
-    
-    # def converse(self):
-    #     """Main function to handle speech-based conversation"""
-    #     greeting = f"Hello! I'm {self.name}, your {self.current_culture} cultural pen pal. What would you like to talk about today? By default, I'll listen to you in English. If you need to toggle the speech recognition language, just say/type 'toggle speech recognition'. If you want to switch between text and speech say/type 'use text' or 'use speech' respectively."
-    #     print(f"{self.name}: {greeting}")
-    #     self.speak_output(greeting)
-        
-    #     while True:
-    #         try:
-    #             user_input = None
-                
-    #             if self.use_speech:
-    #                 user_input = self.listen_for_input()
-    #             else:
-    #                 user_input = input("Message: ")
-                
-    #             if user_input.lower() in ["exit", "goodbye", "bye", "quit", "end"]:
-    #                 farewell = f"It was nice talking with you! Goodbye!"
-    #                 print(f"{self.name}: {farewell}")
-    #                 self.speak_output(farewell)
-    #                 break
-                
-    #             if user_input.lower() == "use text":
-    #                 self.use_speech = False
-    #             elif user_input.lower() == "use speech":
-    #                 self.use_speech = True
-                
-    #             # Check if user wants to toggle speech recognition or switch language/culture
-    #             requested_action = self.detect_language_request(user_input)
-                
-    #             if requested_action == "toggle_speech":
-    #                 response = self.toggle_speech_recognition_language()
-    #                 print(f"{self.name}: {response}")
-    #                 self.speak_output(response)
-    #                 continue
-    #             elif requested_action and requested_action != self.current_culture:
-    #                 # Reset speech recognition to English before switching personality
-    #                 self.speech_recognition_language = "en-US"
-                    
-    #                 response = self.switch_personality(requested_action)
-    #                 print(f"{self.name}: {response}")
-    #                 self.speak_output(response)
-    #                 continue
-                
-    #             # Generate response
-    #             raw_response = self.chain.invoke({
-    #                 "input": user_input,
-    #                 "short_term_memory": self.short_term_memory.buffer,
-    #                 "long_term_memory": self.long_term_summary_memory.buffer
-    #             })
-                
-    #             clean_response = self.clean_response(raw_response)
-                
-    #             # This is wrong right now, we are saving conversations to both long and short-term memory to showcase the memory handling
-    #             # In the full implementation, long-term memory will be populated with usefull culture/language information
-    #             # While short-term memory will hold information about the conversation
-    #             self.add_to_short_term_memory(user_input, clean_response)
-                
-    #             # Output response
-    #             print(f"{self.name}: {clean_response}")
-    #             self.speak_output(clean_response)
-                
-    #         except KeyboardInterrupt:
-    #             print("\nEnding conversation...")
-    #             break
-    #         except Exception as e:
-    #             print(f"Error during conversation: {str(e)}")
-    #             err_msg = "I'm having some technical difficulties. Let's try again."
-    #             print(f"{self.name}: {err_msg}")
-    #             self.speak_output(err_msg)
 
     def converse(self):
         """Modified function to handle conversation from Java commands."""
@@ -501,13 +450,13 @@ class CulturalPenPal:
                 raw_response = self.chain.invoke({
                     "input": user_input,
                     "short_term_memory": self.short_term_memory.buffer,
-                    "long_term_memory": self.long_term_summary_memory.buffer
+                    "long_term_memory": self.long_term_memory.buffer
                 })
                 
                 clean_response = self.clean_response(raw_response)
-
-                # Save conversation memory
-                self.add_to_short_term_memory(user_input, clean_response)
+                
+                if self.use_memory:
+                    self.add_to_short_term_memory(user_input, clean_response)
 
                 # Output response
                 print(f"{self.name}: {clean_response}", flush=True)  # Flush ensures the Java GUI receives it
