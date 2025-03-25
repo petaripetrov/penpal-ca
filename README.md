@@ -1,4 +1,5 @@
 # Requirements
+- Java 17 or later
 - Python 3.12
 - [Ollama](https://ollama.com/)
 

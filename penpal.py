@@ -30,7 +30,7 @@ environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
-                 model_name="llama2", use_memory=True,
+                 model_name="llama2", use_memory=True, # Change flag here
                  persistence_dir="pen_pal_data"):
         """
         Initialize the Cultural Pen Pal agent with free language models.
@@ -482,13 +482,15 @@ if __name__ == "__main__":
         user_name = "Aria"
 
     print("Starting Cultural PenPal...", flush=True)
-    # Create a cultural pen pal instance
+    # Create a cultural pen pal instance (DEFAULT = USE MEMORY)
     pen_pal = CulturalPenPal(
         name=user_name,
+         #UNCOMMENT BELOW TO DISABLE MEMORY
+        #     use_memory=False,
         culture=selected_language,
         model_name="llama2" # TODO maybe introduce a CLI flag for easy model switching
-    )
-    
+    )  
+
     # Start the conversation
     pen_pal.converse()
 
