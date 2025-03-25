@@ -1,10 +1,14 @@
 import os
+
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
 import re  
 import json
 import time
 import codecs
+import sys
 import random
-
 import pygame
 import speech_recognition as sr
 
@@ -19,6 +23,10 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_community.document_loaders import TextLoader
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferMemory, ConversationSummaryBufferMemory
+
+sys.stderr = open("debug.log", "w")
+
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
@@ -89,8 +97,8 @@ class CulturalPenPal:
         self.setup_conversation_chain()
         
         # Initialize pygame for audio playback
-        pygame.mixer.init()
-        print(f"{self.name} is ready to converse! Say or type 'exit' to end the conversation.")
+        pygame.init()
+        print(f"{self.name} is ready to converse! Say or type 'exit' to end the conversation.", flush=True)
         
     def _load_knowledge(self, culture):
         """Load the pen pal's knowledge from file or initialize if not exists"""
@@ -216,9 +224,7 @@ class CulturalPenPal:
     def setup_conversation_chain(self):
         """Set up the LangChain conversation chain with the system prompt"""
         profile = self.culture_profiles[self.current_culture]
-        
-        print(self.get_learnable_words())
-        
+                
         system_template = f"""
         You are {self.name}, a cultural pen pal and language tutor from {self.current_culture} culture.
         
@@ -312,7 +318,7 @@ class CulturalPenPal:
         try:
             # Always use English for speech recognition unless explicitly toggled
             user_input = recognizer.recognize_google(audio, language=self.speech_recognition_language)
-            print(f"You said: {user_input}")
+            print(f"You said: {user_input}", flush=True)
             return user_input
         except sr.UnknownValueError:
             print("Sorry, I could not understand the audio.")
@@ -405,50 +411,41 @@ class CulturalPenPal:
                     return language_to_culture[requested_language]
         
         return None
-    
+
     def converse(self):
-        """Main function to handle speech-based conversation"""
-        greeting = f"Hello! I'm {self.name}, your {self.current_culture} cultural pen pal. What would you like to talk about today? By default, I'll listen to you in English. If you need to toggle the speech recognition language, just say/type 'toggle speech recognition'. If you want to switch between text and speech say/type 'use text' or 'use speech' respectively."
-        print(f"{self.name}: {greeting}")
+        """Modified function to handle conversation from Java commands."""
+        greeting = f"Hello! I'm {self.name}, your {self.current_culture} cultural pen pal."
+        print(f"{self.name}: {greeting}", flush=True)
         self.speak_output(greeting)
-        
+
         while True:
             try:
-                user_input = None
+                # Read input from Java (stdin)
+                java_input = sys.stdin.readline().strip()
                 
-                if self.use_speech:
-                    user_input = self.listen_for_input()
-                else:
-                    user_input = input("Message: ")
+                if not java_input:
+                    continue  # Ignore empty input
                 
-                if user_input.lower() in ["exit", "goodbye", "bye", "quit", "end"]:
+                if java_input.lower() == "exit":
                     farewell = f"It was nice talking with you! Goodbye!"
-                    print(f"{self.name}: {farewell}")
+                    print(f"{self.name}: {farewell}", flush=True)
                     self.speak_output(farewell)
-                    break
+
+                    print("Exiting conversation...", flush=True)
+                    break  # Stop the loop
+                
+                elif java_input == "START_AUDIO":
+                    user_input = self.listen_for_input()  # Capture speech input
+                else:
+                    user_input = java_input  # If Java sends text, use it directly
+                    print(f"You said: {user_input}", flush=True)
+
                 
                 if user_input.lower() == "use text":
                     self.use_speech = False
                 elif user_input.lower() == "use speech":
                     self.use_speech = True
-                
-                # Check if user wants to toggle speech recognition or switch language/culture
-                requested_action = self.detect_language_request(user_input)
-                
-                if requested_action == "toggle_speech":
-                    response = self.toggle_speech_recognition_language()
-                    print(f"{self.name}: {response}")
-                    self.speak_output(response)
-                    continue
-                elif requested_action and requested_action != self.current_culture:
-                    # Reset speech recognition to English before switching personality
-                    self.speech_recognition_language = "en-US"
-                    
-                    response = self.switch_personality(requested_action)
-                    print(f"{self.name}: {response}")
-                    self.speak_output(response)
-                    continue
-                
+
                 # Generate response
                 raw_response = self.chain.invoke({
                     "input": user_input,
@@ -460,27 +457,40 @@ class CulturalPenPal:
                 
                 if self.use_memory:
                     self.add_to_short_term_memory(user_input, clean_response)
-                
+
                 # Output response
-                print(f"{self.name}: {clean_response}")
+                print(f"{self.name}: {clean_response}", flush=True)  # Flush ensures the Java GUI receives it
                 self.speak_output(clean_response)
-                
+
             except KeyboardInterrupt:
-                print("\nEnding conversation...")
+                print("\nEnding conversation...", file=sys.stderr, flush=True)
                 break
             except Exception as e:
-                print(f"Error during conversation: {str(e)}")
+                print(f"Error: {str(e)}", file=sys.stderr, flush=True)
                 err_msg = "I'm having some technical difficulties. Let's try again."
-                print(f"{self.name}: {err_msg}")
+                print(f"{self.name}: {err_msg}", flush=True)
                 self.speak_output(err_msg)
 
 if __name__ == "__main__":
+    # grab sys args from the GUI
+    if len(sys.argv) > 1:
+        selected_language = sys.argv[1] 
+        user_name = sys.argv[2] if len(sys.argv) > 2 else "Default Name"
+    else:
+        # default values
+        selected_language = "American"
+        user_name = "Aria"
+
+    print("Starting Cultural PenPal...", flush=True)
     # Create a cultural pen pal instance
     pen_pal = CulturalPenPal(
-        name="Aria",
-        culture="American",
+        name=user_name,
+        culture=selected_language,
         model_name="llama2" # TODO maybe introduce a CLI flag for easy model switching
     )
     
     # Start the conversation
     pen_pal.converse()
+
+    print("Cultural PenPal has ended.", flush=True)
+    sys.stdout.flush() 
