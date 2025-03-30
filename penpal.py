@@ -321,7 +321,7 @@ class CulturalPenPal:
         with sr.Microphone() as source:
             print("Listening for your input...")
             recognizer.adjust_for_ambient_noise(source, duration=1)
-            audio = recognizer.listen(source, timeout=10)
+            audio = recognizer.listen(source, timeout=20)
         
         try:
             # Always use English for speech recognition unless explicitly toggled
