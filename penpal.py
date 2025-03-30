@@ -27,6 +27,7 @@ from langchain.memory import ConversationBufferMemory, ConversationSummaryBuffer
 sys.stderr = open("debug.log", "w")
 
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+MAX_TOKENS = 200
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
@@ -52,7 +53,7 @@ class CulturalPenPal:
         self.speech_recognition_language = "en-US"
         self.use_speech = False
         
-        self.llm = OllamaLLM(model=model_name)
+        self.llm = OllamaLLM(model=model_name, num_predict=MAX_TOKENS)
         
         self.embeddings = HuggingFaceEmbeddings(
             model_name="all-MiniLM-L6-v2"
@@ -241,6 +242,8 @@ class CulturalPenPal:
         - If you detect that the user is a beginner, use simpler words and shorter sentences
         - NEVER add prefixes like "AI:" or "{self.name}:" before your responses
         - NEVER using emojis or special characters that might cause encoding issues
+        - DO NOT INCLUDE ASTERIKS * in your responses
+        - DO NOT INCLUDE any pronunciation guides or phonetic spellings in your answer like (BON-JOUR)
         
         TEACHING APPROACH:
         - Gradually introduce new vocabulary and phrases
@@ -267,6 +270,9 @@ class CulturalPenPal:
         response = re.sub(r"^(AI:|Assistant:|Claude:|"+self.name+r":|Human:)\s*", "", response)
         
         response = re.sub(r"\*+.+\*", "", response) # for now just remove the emotional qualifiers
+        forbidden_characters = ['*']
+        response = ''.join(char for char in response if char not in forbidden_characters)
+    
         
         # Remove any potential problematic characters for TTS
         response = ''.join(char for char in response if ord(char) < 65536)
@@ -310,6 +316,8 @@ class CulturalPenPal:
     def listen_for_input(self):
         """Capture speech input from the user"""
         recognizer = sr.Recognizer()
+            
+        recognizer.pause_threshold = 2.0  # Increase the silence tolerance (default is 0.8 seconds)
         with sr.Microphone() as source:
             print("Listening for your input...")
             recognizer.adjust_for_ambient_noise(source, duration=1)
