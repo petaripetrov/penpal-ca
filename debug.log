@@ -1,3 +1,6 @@
-/Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py:79: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
+/Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py:80: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
   self.short_term_memory = ConversationBufferMemory(
+Created a chunk of size 1096, which is longer than the specified 1000
+Created a chunk of size 1075, which is longer than the specified 1000
+Created a chunk of size 1058, which is longer than the specified 1000
 Created a chunk of size 1726, which is longer than the specified 1000

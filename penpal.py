@@ -11,6 +11,7 @@ import sys
 import random
 import pygame
 import speech_recognition as sr
+import textwrap
 
 from gtts import gTTS
 from pathlib import Path
@@ -27,7 +28,7 @@ from langchain.memory import ConversationBufferMemory, ConversationSummaryBuffer
 sys.stderr = open("debug.log", "w")
 
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-MAX_TOKENS = 200
+MAX_TOKENS = 100
 
 class CulturalPenPal:
     def __init__(self, name="Aria", culture="American", 
@@ -53,7 +54,7 @@ class CulturalPenPal:
         self.speech_recognition_language = "en-US"
         self.use_speech = False
         
-        self.llm = OllamaLLM(model=model_name, num_predict=MAX_TOKENS)
+        self.llm = OllamaLLM(model=model_name)
         
         self.embeddings = HuggingFaceEmbeddings(
             model_name="all-MiniLM-L6-v2"
@@ -236,7 +237,9 @@ class CulturalPenPal:
         - You help users learn {profile["language"]}
         
         IMPORTANT RULES:
-        - Keep your responses short and conversational as they can be spoken aloud
+        - Keep your responses SHORT and conversational as they can be spoken aloud
+        - Keep your response WITHIN {MAX_TOKENS} tokens
+        - DO NOT INCLUDE THE AMOUNT OF TOKENS YOU USED IN THE OUTPUT.
         - Respond primarily in {profile["language"]} if the user is learning, but include English translations when appropriate
         - If the user asks to learn a different language, do not switch languages yourself but inform them that they can request to speak with a different cultural pen pal
         - If you detect that the user is a beginner, use simpler words and shorter sentences
@@ -244,6 +247,7 @@ class CulturalPenPal:
         - NEVER using emojis or special characters that might cause encoding issues
         - DO NOT INCLUDE ASTERIKS * in your responses
         - DO NOT INCLUDE any pronunciation guides or phonetic spellings in your answer like (BON-JOUR)
+    
         
         TEACHING APPROACH:
         - Gradually introduce new vocabulary and phrases
@@ -267,17 +271,22 @@ class CulturalPenPal:
     def clean_response(self, response):
         """Clean the response from unwanted prefixes and problematic characters"""
         # Remove prefixes like "AI:", "Assistant:", "[Name]:"
-        response = re.sub(r"^(AI:|Assistant:|Claude:|"+self.name+r":|Human:)\s*", "", response)
-        
+        response = re.sub(r"^(AI:|Assistant:|Claude:|"+self.name+r":|Human:)\s*|in a concise manner","", response)
+        response = re.sub(f"in {MAX_TOKENS} tokens", "", response)
         response = re.sub(r"\*+.+\*", "", response) # for now just remove the emotional qualifiers
         forbidden_characters = ['*']
         response = ''.join(char for char in response if char not in forbidden_characters)
-    
+
+        response = re.sub(r'(?<=[.!?])\s+(?=[A-Z])', r'\n', response)
         
         # Remove any potential problematic characters for TTS
         response = ''.join(char for char in response if ord(char) < 65536)
+
+        # Wrap lines to a max width
+        wrapped_response = textwrap.fill(response, width=85)
+
+        return wrapped_response.strip()
         
-        return response.strip()
     
     def load_long_term_memory(self, culture):
         """Load cultural information into short-term memory"""
@@ -317,11 +326,11 @@ class CulturalPenPal:
         """Capture speech input from the user"""
         recognizer = sr.Recognizer()
             
-        recognizer.pause_threshold = 2.0  # Increase the silence tolerance (default is 0.8 seconds)
+        recognizer.pause_threshold = 3.0  # Increase the silence tolerance (default is 0.8 seconds)
         with sr.Microphone() as source:
             print("Listening for your input...")
             recognizer.adjust_for_ambient_noise(source, duration=1)
-            audio = recognizer.listen(source, timeout=20)
+            audio = recognizer.listen(source, timeout=15)
         
         try:
             # Always use English for speech recognition unless explicitly toggled
@@ -448,15 +457,18 @@ class CulturalPenPal:
                     user_input = java_input  # If Java sends text, use it directly
                     print(f"You said: {user_input}", flush=True)
 
-                
+                print(f"{self.name} is thinking...", flush=True)
+
+
                 if user_input.lower() == "use text":
                     self.use_speech = False
                 elif user_input.lower() == "use speech":
                     self.use_speech = True
 
                 # Generate response
+                prompt =  user_input + f" Keep your response WITHIN {MAX_TOKENS} tokens, but do not include the amount of tokens you used in the output."
                 raw_response = self.chain.invoke({
-                    "input": user_input,
+                    "input": prompt,
                     "short_term_memory": self.short_term_memory.buffer,
                     "long_term_memory": self.long_term_memory.buffer
                 })
@@ -494,7 +506,7 @@ if __name__ == "__main__":
     pen_pal = CulturalPenPal(
         name=user_name,
          #UNCOMMENT BELOW TO DISABLE MEMORY
-        #     use_memory=False,
+        # use_memory=False,
         culture=selected_language,
         model_name="llama2" # TODO maybe introduce a CLI flag for easy model switching
     )  
