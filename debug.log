@@ -1,3 +1,24 @@
 /Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py:79: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
   self.short_term_memory = ConversationBufferMemory(
+Created a chunk of size 1096, which is longer than the specified 1000
+Created a chunk of size 1075, which is longer than the specified 1000
+Created a chunk of size 1058, which is longer than the specified 1000
+Created a chunk of size 1264, which is longer than the specified 1000
 Created a chunk of size 1726, which is longer than the specified 1000
+Error: [Errno 32] Broken pipe
+Traceback (most recent call last):
+  File "/Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py", line 470, in converse
+    print(f"{self.name}: {clean_response}", flush=True)  # Flush ensures the Java GUI receives it
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py", line 503, in <module>
+    pen_pal.converse()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/annavisman/stack/TUDelft/CA/penpal-ca/penpal.py", line 479, in converse
+    print(f"{self.name}: {err_msg}", flush=True)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe

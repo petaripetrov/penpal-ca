@@ -5,19 +5,23 @@ import statsmodels.formula.api as smf
 import os
 
 # Set path (update as needed)
-path = "TODO"
+path = "data"
 
 # WORD RETENTION TEST ANALYSIS
 def load_data(language):
-    memory_df = pd.read_csv(os.path.join(path, f"Memory {language}.csv"))
-    no_memory_df = pd.read_csv(os.path.join(path, f"No memory {language}.csv"))
+    memory_df = pd.read_csv(os.path.join(path, f"Memory-{language}.csv"))
+    no_memory_df = pd.read_csv(os.path.join(path, f"No-memory-{language}.csv"))
     
     memory_df['condition'] = 'memory'
     no_memory_df['condition'] = 'no_memory'
 
-    memory_df['Score'] = memory_df['Score'].astype(str).apply(convert_score)
-    no_memory_df['Score'] = no_memory_df['Score'].astype(str).apply(convert_score)
-    
+    memory_df.columns = memory_df.columns.str.strip()
+    no_memory_df.columns = no_memory_df.columns.str.strip()
+
+    # if you download the full excel and use python to convert to csv, the scores/10 will become their scores automatically
+    # memory_df['Score'] = memory_df['Score'].astype(str).apply(convert_score)
+    # no_memory_df['Score'] = no_memory_df['Score'].astype(str).apply(convert_score)
+
     # Drop any column that is entirely empty
     memory_df.dropna(axis=1, how='all', inplace=True)
     no_memory_df.dropna(axis=1, how='all', inplace=True)
