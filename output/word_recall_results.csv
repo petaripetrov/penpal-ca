@@ -1,0 +1,5 @@
+Language,Test,Statistic,p-value
+Spanish,Paired t-test,-1.6879710397858663,0.1352726369857419
+French,Paired t-test,0.0,1.0
+Japanese,Wilcoxon signed-rank test,6.0,0.6830913983096087
+German,Wilcoxon signed-rank test,0.0,0.014058605323737268

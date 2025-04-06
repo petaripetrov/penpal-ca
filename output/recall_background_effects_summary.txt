@@ -1,0 +1,19 @@
+            Mixed Linear Model Regression Results
+==============================================================
+Model:               MixedLM   Dependent Variable:   Score    
+No. Observations:    60        Method:               REML     
+No. Groups:          30        Scale:                1.2788   
+Min. group size:     2         Log-Likelihood:       -114.1925
+Max. group size:     2         Converged:            Yes      
+Mean group size:     2.0                                      
+--------------------------------------------------------------
+                    Coef.  Std.Err.   z    P>|z| [0.025 0.975]
+--------------------------------------------------------------
+Intercept            7.410    1.484  4.995 0.000  4.502 10.318
+Memory               1.659    0.759  2.185 0.029  0.171  3.148
+NumLanguages         0.036    0.264  0.136 0.892 -0.481  0.553
+Memory:NumLanguages -0.264    0.205 -1.288 0.198 -0.665  0.138
+PriorExperience     -0.776    1.375 -0.564 0.572 -3.470  1.918
+CAFamiliarity        1.062    0.818  1.299 0.194 -0.541  2.666
+Group Var            2.736    1.151                           
+==============================================================
