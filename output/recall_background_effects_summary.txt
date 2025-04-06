@@ -17,3 +17,27 @@ PriorExperience     -0.776    1.375 -0.564 0.572 -3.470  1.918
 CAFamiliarity        1.062    0.818  1.299 0.194 -0.541  2.666
 Group Var            2.736    1.151                           
 ==============================================================
+
+Memory (1.659, p = 0.029):
+This coefficient indicates that, on average, being in the Memory condition (compared to the reference, which is likely no_memory) is associated with an increase in score of about 1.66 points. 
+The p-value (0.029) shows this effect is statistically significant, meaning there’s evidence that the memory condition improves scores.
+
+NumLanguages (0.036, p = 0.892):
+The coefficient for NumLanguages is very small (0.036) and not statistically significant (p = 0.892). 
+This suggests that, in the baseline condition, the number of languages spoken does not have a meaningful impact on scores.
+
+Memory:NumLanguages Interaction (-0.264, p = 0.198):
+This interaction term tests whether the effect of the Memory condition changes with the number of languages spoken. 
+The negative coefficient (-0.264) suggests that the benefit of the Memory condition might decrease slightly as the number of languages increases, but with a p-value of 0.198, this interaction is not statistically significant.
+
+PriorExperience (-0.776, p = 0.572):
+This effect is negative, indicating that having prior language learning experience might be associated with a lower score (by about 0.78 points), 
+but it is not statistically significant (p = 0.572). There isn’t enough evidence to conclude a reliable effect here.
+
+CAFamiliarity (1.062, p = 0.194):
+This coefficient indicates that familiarity with conversational agents (CAs) is associated with a 1.06 point increase in score. 
+However, with a p-value of 0.194, this effect is not statistically significant at the conventional 0.05 level.
+
+Group Var (2.736):
+This represents the variance attributable to differences between groups (in this case, each subject’s paired data, since each participant provided two observations). 
+A value of 2.736 indicates there is some variability between participants that the model accounts for.

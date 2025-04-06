@@ -17,8 +17,8 @@ engagement_results = []
 # DATA PROCESSING
 def replace_missing_rows(memory_df, no_memory_df):
 
-    memory_ids = set(memory_df['Please enter your participant ID'])
-    no_memory_ids = set(no_memory_df['Please enter your participant ID'])
+    memory_ids = set(memory_df['ID'])
+    no_memory_ids = set(no_memory_df['ID'])
 
     # Find unmatched IDs
     only_in_memory = memory_ids - no_memory_ids
@@ -28,7 +28,7 @@ def replace_missing_rows(memory_df, no_memory_df):
     for pid in only_in_memory:
         avg_score = no_memory_df['Score'].mean()
         fake_row = pd.DataFrame([{
-            'Please enter your participant ID': pid,
+            'ID': pid,
             'Score': avg_score,
             'Memory': 1
         }])
@@ -38,7 +38,7 @@ def replace_missing_rows(memory_df, no_memory_df):
     for pid in only_in_no_memory:
         avg_score = memory_df['Score'].mean()
         fake_row = pd.DataFrame([{
-            'Please enter your participant ID': pid,
+            'ID': pid,
             'Score': avg_score,
             'Memory': 0
         }])
@@ -47,12 +47,12 @@ def replace_missing_rows(memory_df, no_memory_df):
     return memory_df, no_memory_df
 
 def remove_missing_rows(memory_df,no_memory_df):
-    common_ids = set(memory_df['Please enter your participant ID']).intersection(
-        no_memory_df['Please enter your participant ID']
+    common_ids = set(memory_df['ID']).intersection(
+        no_memory_df['ID']
     )
 
-    memory_df = memory_df[memory_df['Please enter your participant ID'].isin(common_ids)]
-    no_memory_df = no_memory_df[no_memory_df['Please enter your participant ID'].isin(common_ids)]
+    memory_df = memory_df[memory_df['ID'].isin(common_ids)]
+    no_memory_df = no_memory_df[no_memory_df['ID'].isin(common_ids)]
 
     return memory_df, no_memory_df
 
@@ -88,9 +88,9 @@ def load_data(language):
     memory_df.dropna(axis=1, how='all', inplace=True)
     no_memory_df.dropna(axis=1, how='all', inplace=True)
     
-    memory_df = memory_df[['Please enter your participant ID', 'Score', 'Memory']]
-    no_memory_df = no_memory_df[['Please enter your participant ID', 'Score', 'Memory']]
-    
+    memory_df = memory_df[['Please enter your participant ID', 'Score', 'Memory']].rename(columns={"Please enter your participant ID": "ID"})
+    no_memory_df = no_memory_df[['Please enter your participant ID', 'Score', 'Memory']].rename(columns={"Please enter your participant ID": "ID"})
+
     # # Remove any rows with empty participant IDs
     # memory_df, no_memory_df = remove_missing_rows(memory_df, no_memory_df)
 
@@ -112,6 +112,10 @@ def load_data_all_languages(languages):
 def load_engagement_data():
     engagement_df = pd.read_csv(os.path.join(path, "Survey.csv"))
 
+    engagement_df = engagement_df.rename(columns={
+        'Please enter your participant ID': 'ID',
+    })
+
     # If any cell is empty, drop the entire row
     engagement_df.dropna(how='any', inplace=True)
     
@@ -123,9 +127,12 @@ def load_engagement_data():
     no_memory_df = engagement_df[engagement_df['Memory'] == 'No']
 
     # map memory condition to 1 and no memory condition to 0
-    memory_df['Memory'] = memory_df['Memory'].map({'Yes': 1, 'No': 0})
-    no_memory_df['Memory'] = no_memory_df['Memory'].map({'Yes': 1, 'No': 0})
+    memory_df = memory_df.copy()
+    no_memory_df = no_memory_df.copy()
 
+    memory_df['Memory'] = memory_df['Memory'].str.strip().str.capitalize().map({'Yes': 1, 'No': 0})
+    no_memory_df['Memory'] = no_memory_df['Memory'].str.strip().str.capitalize().map({'Yes': 1, 'No': 0})
+    
     return memory_df, no_memory_df
 
 # PLOTTING
@@ -142,8 +149,8 @@ def plot_word_recall_scores(language):
     memory_df['Score'] = pd.to_numeric(memory_df['Score'], errors='coerce')
     no_memory_df['Score'] = pd.to_numeric(no_memory_df['Score'], errors='coerce')
 
-    df = pd.concat([memory_df[['Please enter your participant ID', 'Score', 'condition']],
-                    no_memory_df[['Please enter your participant ID', 'Score', 'condition']]])
+    df = pd.concat([memory_df[['ID', 'Score', 'condition']],
+                    no_memory_df[['ID', 'Score', 'condition']]])
 
     os.makedirs("plots/recall", exist_ok=True)
 
@@ -163,14 +170,14 @@ def plot_engagement():
     question_number = 1
     for col in engagement_columns:
         # For memory condition
-        df_mem = memory_df[['Please enter your participant ID', col]].copy()
-        df_mem['condition'] = 'memory'
+        df_mem = memory_df[['ID', col]].copy()
+        df_mem['Memory'] = 1
         df_mem['Question'] = f"{question_number}"
         df_mem = df_mem.rename(columns={col: 'Score'})
         
         # For no_memory condition
-        df_nomem = no_memory_df[['Please enter your participant ID', col]].copy()
-        df_nomem['condition'] = 'no_memory'
+        df_nomem = no_memory_df[['ID', col]].copy()
+        df_nomem['Memory'] = 0
         df_nomem['Question'] = f"{question_number}"
         df_nomem = df_nomem.rename(columns={col: 'Score'})
         
@@ -205,7 +212,7 @@ def plot_engagement():
 
 # WORD RETENTION TEST ANALYSIS
 def test_word_recall(language, data):
-    no_memory = data[data['Memroy'] == 0]['Score']
+    no_memory = data[data['Memory'] == 0]['Score']
     memory = data[data['Memory'] == 1]['Score']
 
     # test for normality
@@ -306,6 +313,17 @@ def analyze_background_effects_on_word_recall():
         f.write(str(result.summary()))
 
 # ENGAGEMENT SURVEY ANALYSIS
+def compute_composite_scores(df, min_col, max_col, new_col_name):
+    # Ensure the selected columns are numeric
+    numeric_columns = df.iloc[:, min_col:max_col].apply(pd.to_numeric, errors='coerce')
+    
+    # Fill missing values with column mean
+    numeric_columns.fillna(numeric_columns.mean(), inplace=True)
+    
+    # Calculate the mean score for the given set of questions
+    df[new_col_name] = numeric_columns.mean(axis=1)
+    return df
+
 def convert_likert_response(response):
     mapping = {
         "Strongly Disagree": 1,
@@ -316,38 +334,79 @@ def convert_likert_response(response):
     }
     return mapping.get(response, None)
 
+def merge_engagement_data(memory_df, no_memory_df, engagement_columns):
+    # Extract columns [5:17] and rename them to engagement_columns
+    memory_df = memory_df.iloc[:, [1] + [-1] + list(range(5, 17))].copy()  # Include ID column
+    no_memory_df = no_memory_df.iloc[:, [1] + [-1] + list(range(5, 17))].copy()  # Include ID column
+        
+    memory_df.columns = ['ID'] + ['Memory'] +  engagement_columns
+    no_memory_df.columns = ['ID'] + ['Memory'] + engagement_columns
+
+    # Merge the two DataFrames
+    merged_df = pd.concat([memory_df, no_memory_df], ignore_index=True)
+
+    return merged_df
+
+def test_category_effect(engagement_df, category):
+     # Separate the data by memory condition
+    memory = engagement_df[engagement_df['Memory'] == 1][category].dropna()
+    no_memory = engagement_df[engagement_df['Memory'] == 0][category].dropna()
+
+    # # Test for normality using Shapiro-Wilk test
+    # memory_normal = stats.shapiro(memory)[1] > 0.05
+    # no_memory_normal = stats.shapiro(no_memory)[1] > 0.05
+
+    stat, p_value = stats.wilcoxon(memory, no_memory)
+
+    print(f"{category}: Wilcoxon signed-rank test: Statistic={stat}, p-value={p_value}")
+
+    # Append the results to engagement_results
+    engagement_results.append({
+        'Category': category,
+        'Test': 'Wilcoxon signed-rank test',
+        'Statistic': stat,
+        'p-value': p_value
+    })
+
 def test_user_engagement():
+    # map questions to categories
+    fa_questions = ['FA_Q1', 'FA_Q2', 'FA_Q3']
+    pu_questions = ['PU_Q1', 'PU_Q2', 'PU_Q3']
+    ae_questions = ['AE_Q1', 'AE_Q2', 'AE_Q3']
+    rw_questions = ['RW_Q1', 'RW_Q2', 'RW_Q3']
+
     memory_df, no_memory_df = load_engagement_data()
-    engagement_columns = memory_df.columns[5:17]
+
+    # merge the frames and rename the columns to the labels above
+    engagement_columns = fa_questions + pu_questions + ae_questions + rw_questions
+    merged = merge_engagement_data(memory_df, no_memory_df, engagement_columns)
+
+    # Calculate composite scores and add as new columns
+    merged = compute_composite_scores(merged, 2, 4, 'FA')
+    merged = compute_composite_scores(merged, 5, 7, 'PU')
+    merged = compute_composite_scores(merged, 8, 10, 'AE')
+    merged = compute_composite_scores(merged, 11, 13, 'RW')
+
+    print(merged.columns)
+    print(merged.shape)
     
-    for col in engagement_columns:
-        merged_df = pd.merge(memory_df[['Please enter your participant ID', col]], no_memory_df[['Please enter your participant ID', col]], on='Please enter your participant ID', suffixes=('_memory', '_no_memory'))
-
-        memory_scores = merged_df[col + '_memory'].dropna() # fix this
-        no_memory_scores = merged_df[col + '_no_memory'].dropna()
-
-        stat, p_value = stats.wilcoxon(memory_scores, no_memory_scores)
-
-        print(f"{col}: Wilcoxon signed-rank test: Statistic={stat}, p-value={p_value}")
-        engagement_results.append({
-            'Question': col,
-            'Test': 'Wilcoxon signed-rank test',
-            'Statistic': stat,
-            'p-value': p_value
-        })
+    test_category_effect(merged, 'FA')
+    test_category_effect(merged, 'PU')
+    test_category_effect(merged, 'AE')
+    test_category_effect(merged, 'RW')
 
 if __name__ == "__main__":
-    test_word_recall_individual()
+    # test_word_recall_individual()
 
-    # test_user_engagement()
+    test_user_engagement()
     # plot_engagement()
 
-    pd.DataFrame(word_recall_results).to_csv("output/word_recall_results.csv", index=False)
-    pd.DataFrame(engagement_results).to_csv("output/engagement_results.csv", index=False)
+    # pd.DataFrame(word_recall_results).to_csv("output/word_recall_results.csv", index=False)
+    # pd.DataFrame(engagement_results).to_csv("output/engagement_results.csv", index=False)
 
-    measure_word_recall_all_languages()
+    # measure_word_recall_all_languages()
 
-    analyze_background_effects_on_word_recall()
+    # analyze_background_effects_on_word_recall()
 
 
 
