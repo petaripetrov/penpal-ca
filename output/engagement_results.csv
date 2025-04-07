@@ -1,13 +1,5 @@
-Question,Test,Statistic,p-value
-"When I was using Cultural Pen-Pal agent, I lost track of the world around me.  ",Wilcoxon signed-rank test,49.5,0.5312499859948482
-I lost myself in this experience .  ,Wilcoxon signed-rank test,67.5,0.9775961140178585
-The time I spent using Cultural Pen-Pal agent just slipped away. ,Wilcoxon signed-rank test,99.0,0.5445557602419855
-I found this agent confusing to use. ,Wilcoxon signed-rank test,24.0,0.018825698760574428
-I felt frustrated while using this Cultural Pen-Pal agent. ,Wilcoxon signed-rank test,48.0,0.08930615242795382
-Using this Cultural Pen-Pal agent was taxing.,Wilcoxon signed-rank test,60.0,0.2506576205563763
-This Cultural Pen-Pal agen was attractive.,Wilcoxon signed-rank test,30.0,0.4385780260809998
-This experience was aesthetically appealing.,Wilcoxon signed-rank test,36.0,0.7962534147376392
-Cultural Pen-Pal agent appealed to be visual senses. ,Wilcoxon signed-rank test,4.0,0.7054569861112734
-I would recommend Cultural Pen-Pal agent to my family and friends.,Wilcoxon signed-rank test,19.5,0.008242697553131366
-My experience was rewarding. ,Wilcoxon signed-rank test,19.5,0.0009965244523446252
-I felt interested in this experience. ,Wilcoxon signed-rank test,41.0,0.1417921582139216
+Category,Test,Statistic,p-value
+FA,Wilcoxon signed-rank test,132.5,0.41840760679648425
+PU,Wilcoxon signed-rank test,93.5,0.036757088757021765
+AE,Wilcoxon signed-rank test,52.5,0.6693121437443776
+RW,Wilcoxon signed-rank test,49.5,0.003994013399415527

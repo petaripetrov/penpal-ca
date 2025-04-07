@@ -1,21 +1,15 @@
-               Mixed Linear Model Regression Results
-====================================================================
-Model:                 MixedLM     Dependent Variable:     Score    
-No. Observations:      60          Method:                 REML     
-No. Groups:            4           Scale:                  3.0380   
-Min. group size:       14          Log-Likelihood:         -120.7164
-Max. group size:       16          Converged:              Yes      
-Mean group size:       15.0                                         
---------------------------------------------------------------------
-                          Coef.  Std.Err.   z    P>|z| [0.025 0.975]
---------------------------------------------------------------------
-Intercept                  7.776    0.614 12.659 0.000  6.572  8.980
-C(condition)[T.no_memory] -0.711    0.450 -1.580 0.114 -1.593  0.171
-Group Var                  1.103    0.632                           
-====================================================================
-
-Baseline (Memory Condition): Expected score ≈ 7.78
-No-Memory Condition: Expected score is 0.71 points lower than the memory condition, but this difference is not statistically significant (p = 0.114).
-Language Variability: There is notable variability between languages, which is captured by a group variance of 1.103.
-
-In essence, while there is a trend toward lower scores without memory support, the evidence is not strong enough to conclude that the memory condition has a significant overall effect on word recall when accounting for language differences.
+         Mixed Linear Model Regression Results
+========================================================
+Model:             MixedLM Dependent Variable: Score    
+No. Observations:  60      Method:             REML     
+No. Groups:        4       Scale:              3.0380   
+Min. group size:   14      Log-Likelihood:     -120.7164
+Max. group size:   16      Converged:          Yes      
+Mean group size:   15.0                                 
+--------------------------------------------------------
+               Coef. Std.Err.   z    P>|z| [0.025 0.975]
+--------------------------------------------------------
+Intercept      7.065    0.614 11.501 0.000  5.861  8.269
+C(Memory)[T.1] 0.711    0.450  1.580 0.114 -0.171  1.593
+Group Var      1.103    0.632                           
+========================================================

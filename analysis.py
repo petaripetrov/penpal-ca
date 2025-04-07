@@ -16,6 +16,7 @@ engagement_results = []
 
 # DATA PROCESSING
 def replace_missing_rows(memory_df, no_memory_df):
+    # replace with the column average
 
     memory_ids = set(memory_df['ID'])
     no_memory_ids = set(no_memory_df['ID'])
@@ -30,7 +31,7 @@ def replace_missing_rows(memory_df, no_memory_df):
         fake_row = pd.DataFrame([{
             'ID': pid,
             'Score': avg_score,
-            'Memory': 1
+            'Memory': 0
         }])
         no_memory_df = pd.concat([no_memory_df, fake_row], ignore_index=True)
 
@@ -40,7 +41,7 @@ def replace_missing_rows(memory_df, no_memory_df):
         fake_row = pd.DataFrame([{
             'ID': pid,
             'Score': avg_score,
-            'Memory': 0
+            'Memory': 1
         }])
         memory_df = pd.concat([memory_df, fake_row], ignore_index=True)
 
@@ -72,7 +73,6 @@ def count_languages(text):
     # Return the count of unique languages
     return len(languages)
 
-
 # LOAD DATA
 def load_data(language):
     memory_df = pd.read_csv(os.path.join(path, f"Memory-{language}.csv"))
@@ -90,9 +90,6 @@ def load_data(language):
     
     memory_df = memory_df[['Please enter your participant ID', 'Score', 'Memory']].rename(columns={"Please enter your participant ID": "ID"})
     no_memory_df = no_memory_df[['Please enter your participant ID', 'Score', 'Memory']].rename(columns={"Please enter your participant ID": "ID"})
-
-    # # Remove any rows with empty participant IDs
-    # memory_df, no_memory_df = remove_missing_rows(memory_df, no_memory_df)
 
     # Replace missing rows with average scores
     memory_df, no_memory_df = replace_missing_rows(memory_df, no_memory_df)
@@ -140,8 +137,8 @@ def plot_word_recall_scores(language):
     memory_df = pd.read_csv(os.path.join(path, f"Memory-{language}.csv"))
     no_memory_df = pd.read_csv(os.path.join(path, f"No-memory-{language}.csv"))
 
-    memory_df['condition'] = 'memory'
-    no_memory_df['condition'] = 'no_memory'
+    memory_df['Memory'] = 1
+    no_memory_df['Memory'] = 0
 
     memory_df.columns = memory_df.columns.str.strip()
     no_memory_df.columns = no_memory_df.columns.str.strip()
@@ -149,78 +146,83 @@ def plot_word_recall_scores(language):
     memory_df['Score'] = pd.to_numeric(memory_df['Score'], errors='coerce')
     no_memory_df['Score'] = pd.to_numeric(no_memory_df['Score'], errors='coerce')
 
-    df = pd.concat([memory_df[['ID', 'Score', 'condition']],
-                    no_memory_df[['ID', 'Score', 'condition']]])
+    # rename ID column
+    memory_df = memory_df.rename(columns={"Please enter your participant ID": "ID"})
+    no_memory_df = no_memory_df.rename(columns={"Please enter your participant ID": "ID"})
+
+    df = pd.concat([memory_df[['ID', 'Score', 'Memory']],
+                    no_memory_df[['ID', 'Score', 'Memory']]])
 
     os.makedirs("plots/recall", exist_ok=True)
 
     # Distribution Plot
     plt.figure(figsize=(8, 5))
-    sns.histplot(data=df, x='Score', hue='condition', kde=True, palette='pastel', element='step')
+    sns.histplot(data=df, x='Score', hue='Memory', kde=True, palette='pastel', element='step')
     plt.title(f"{language} - Score Distribution")
     plt.savefig(f"plots/recall/{language}_score_distribution.png")
     plt.close()
 
-def plot_engagement():
-    memory_df, no_memory_df = load_engagement_data()
-    
-    engagement_columns = memory_df.columns[5:17]
-    
+def plot_engagement_category_distributions(merged_df, categories):
+    # Prepare the data for plotting
     long_data = []
-    question_number = 1
-    for col in engagement_columns:
-        # For memory condition
-        df_mem = memory_df[['ID', col]].copy()
-        df_mem['Memory'] = 1
-        df_mem['Question'] = f"{question_number}"
-        df_mem = df_mem.rename(columns={col: 'Score'})
-        
-        # For no_memory condition
-        df_nomem = no_memory_df[['ID', col]].copy()
-        df_nomem['Memory'] = 0
-        df_nomem['Question'] = f"{question_number}"
-        df_nomem = df_nomem.rename(columns={col: 'Score'})
-        
-        long_data.append(df_mem)
-        long_data.append(df_nomem)
-        
-        question_number += 1
+    for category, questions in categories.items():
+        df_category = merged_df[['ID', 'Memory'] + [category]].copy()
+        df_category = df_category.rename(columns={category: 'Score'})
+        df_category['Category'] = category
+        long_data.append(df_category)
 
+    # Combine all categories into a single DataFrame
     combined_long = pd.concat(long_data, ignore_index=True)
-    
-    combined_long['Score'] = pd.to_numeric(combined_long['Score'], errors='coerce')
-    
-    min_score = combined_long['Score'].min()
-    max_score = combined_long['Score'].max()
-    margin = 0.2
-    y_min = min(1, min_score - margin)
-    y_max = max(5, max_score + margin)
 
-    os.makedirs("plots/engagement", exist_ok=True)
+    # Ensure the Score column is numeric
+    combined_long['Score'] = pd.to_numeric(combined_long['Score'], errors='coerce')
+
+    # Map category labels to more descriptive names
+    category_labels = {
+        'FA': 'Focused Attention (FA)',
+        'PU': 'Perceived Usability (PU)',
+        'AE': 'Aesthetic Elements (AE)',
+        'RW': 'Reward Factor (RW)'
+    }
+    combined_long['Category'] = combined_long['Category'].map(category_labels)
+    combined_long['Memory'] = pd.Categorical(combined_long['Memory'], categories=[1, 0], ordered=True)
     
-    # Create the grouped box plot
+    # Plot the violin plot
+    os.makedirs("plots/engagement", exist_ok=True)
     plt.figure(figsize=(12, 6))
-    ax = sns.boxplot(x='Question', y='Score', hue='condition', data=combined_long, palette="pastel")
-    plt.title("User Engagement Scores on Likert Scale")
-    plt.ylim(y_min, y_max) 
-    plt.xlabel("Question")
+    sns.violinplot(
+        data=combined_long,
+        x='Category',
+        y='Score',
+        hue='Memory',
+        split=True,
+        palette="pastel" 
+    )
+    plt.title("Distribution of Engagement Scores by User Engagement Category")
+    plt.xlabel("Category")
     plt.ylabel("Score")
-    plt.legend(title="Condition", loc="upper right")
+    plt.legend(title="Memory Condition", loc="upper right")
     plt.tight_layout()
-    plt.savefig("plots/engagement/engagement_boxplots.png")
+    plt.savefig("plots/engagement/category_violin_plot.png")
     plt.close()
 
 # WORD RETENTION TEST ANALYSIS
 def test_word_recall(language, data):
-    no_memory = data[data['Memory'] == 0]['Score']
-    memory = data[data['Memory'] == 1]['Score']
+    # Align data by ID
+    data['Memory'] = data['Memory'].astype(int)
+
+    paired_data = data.pivot(index='ID', columns='Memory', values='Score').dropna()
+    memory = pd.to_numeric(paired_data[1], errors='coerce')
+    no_memory = pd.to_numeric(paired_data[0], errors='coerce')
+
+    print(paired_data.columns)
 
     # test for normality
     if stats.shapiro(no_memory)[1] > 0.05 and stats.shapiro(memory)[1] > 0.05:
-        t_stat, p_value = stats.ttest_rel(no_memory, memory)
+        t_stat, p_value = stats.ttest_rel(memory, no_memory)
         test_used = "Paired t-test"
     else:
-        t_stat, p_value = stats.wilcoxon(no_memory, memory)
+        t_stat, p_value = stats.wilcoxon(memory, no_memory)
         test_used = "Wilcoxon signed-rank test"
 
     print(f"{language}: {test_used}: Statistic={t_stat}, p-value={p_value}")
@@ -231,44 +233,109 @@ def test_word_recall(language, data):
         'p-value': p_value
     })
 
-def test_word_recall_individual():
+def word_recall_individual_analysis():
     languages = ["Spanish", "French", "Japanese", "German"]
     for lang in languages:
         data = load_data(lang)
         test_word_recall(lang, data)
         plot_word_recall_scores(lang)
 
+# def measure_word_recall_all_languages():
+#     languages = ["Spanish", "French", "Japanese", "German"]
+#     all_data = load_data_all_languages(languages)
+
+#     # save all data to CSV
+#     all_data.to_csv("output/recall_all_languages.csv", index=False)
+
+#     all_data['Score'] = pd.to_numeric(all_data['Score'], errors='coerce')
+#     all_data.dropna(subset=['Score'], inplace=True)
+
+#     print(all_data['Score'].describe())
+
+#     # Fit the mixed-effects model:
+#     # Score ~ condition is our fixed effect
+#     # groups=Language tells the model to use language as a random intercept
+#     model = smf.mixedlm("Score ~ C(Memory)", data=all_data, groups=all_data["Language"])
+#     model_fit = model.fit()
+
+#     print(model_fit.summary())
+
+#     # save the model summary to a CSV file
+#     with open("output/recall_mixed_effects_model_summary.txt", "w") as f:
+#         f.write(str(model_fit.summary()))
+
+#     sns.violinplot(data=all_data, x="Language", y="Score", hue="Memory", split=True, palette="pastel")
+#     plt.title("Distribution of Word Recall Scores by Language and Memory Condition")
+#     plt.savefig("plots/recall/recall_violin_plot.png")
+#     plt.show()
+#     plt.close()
+
 def measure_word_recall_all_languages():
+    import scipy.stats as stats
     languages = ["Spanish", "French", "Japanese", "German"]
     all_data = load_data_all_languages(languages)
-    print(all_data.columns)
 
-    # save all data to CSV
+    # Save all combined data
+    os.makedirs("output", exist_ok=True)
     all_data.to_csv("output/recall_all_languages.csv", index=False)
 
     all_data['Score'] = pd.to_numeric(all_data['Score'], errors='coerce')
     all_data.dropna(subset=['Score'], inplace=True)
 
-    print(all_data['Score'].describe())
+    # print(all_data['Score'].describe())
 
-    # Fit the mixed-effects model:
-    # Score ~ condition is our fixed effect
-    # groups=Language tells the model to use language as a random intercept
-    model = smf.mixedlm("Score ~ C(condition)", data=all_data, groups=all_data["Language"])
+    # Mixed-effects model (overall effect of memory)
+    model = smf.mixedlm("Score ~ C(Memory)", data=all_data, groups=all_data["Language"])
     model_fit = model.fit()
-
     print(model_fit.summary())
 
-    # save the model summary to a CSV file
     with open("output/recall_mixed_effects_model_summary.txt", "w") as f:
         f.write(str(model_fit.summary()))
 
-    sns.violinplot(data=all_data, x="Language", y="Score", hue="condition", split=True, palette="pastel")
-    plt.title("Word Recall Scores by Language and Condition")
-    plt.savefig("plots/recall/violin_distr.png")
+    # Language-wise comparison results
+    results = []
+    for lang in languages:
+        subset = all_data[all_data["Language"] == lang]
+        pivoted = subset.pivot(index="ID", columns="Memory", values="Score").dropna()
+        if pivoted.shape[0] < 2:
+            continue  # Skip if not enough data
+
+        memory_scores = pivoted[1]
+        no_memory_scores = pivoted[0]
+
+        # Choose parametric or non-parametric based on normality
+        if stats.shapiro(memory_scores)[1] > 0.05 and stats.shapiro(no_memory_scores)[1] > 0.05:
+            stat, p = stats.ttest_rel(memory_scores, no_memory_scores)
+            test = "Paired t-test"
+        else:
+            stat, p = stats.wilcoxon(memory_scores, no_memory_scores)
+            test = "Wilcoxon signed-rank test"
+
+        mean_diff = memory_scores.mean() - no_memory_scores.mean()
+
+        results.append({
+            "Language": lang,
+            "Test": test,
+            "Mean_Difference": mean_diff,
+            "Statistic": stat,
+            "p-value": p
+        })
+
+    # Save per-language test results
+    results_df = pd.DataFrame(results)
+    results_df.to_csv("output/recall_per_language_stats.csv", index=False)
+    print(results_df)
+
+    # Plot
+    os.makedirs("plots/recall", exist_ok=True)
+    sns.violinplot(data=all_data, x="Language", y="Score", hue="Memory", split=True, palette="pastel")
+    plt.title("Distribution of Word Recall Scores by Language and Memory Condition")
+    plt.savefig("plots/recall/recall_violin_plot.png")
     plt.show()
     plt.close()
 
+
+# PARTICIPANT BACKGROUND EFFECTS ON WORD RECALL
 def analyze_background_effects_on_word_recall():
     # 1. Load the survey data
     survey_df = pd.read_csv(os.path.join(path, "Survey.csv"))
@@ -352,10 +419,6 @@ def test_category_effect(engagement_df, category):
     memory = engagement_df[engagement_df['Memory'] == 1][category].dropna()
     no_memory = engagement_df[engagement_df['Memory'] == 0][category].dropna()
 
-    # # Test for normality using Shapiro-Wilk test
-    # memory_normal = stats.shapiro(memory)[1] > 0.05
-    # no_memory_normal = stats.shapiro(no_memory)[1] > 0.05
-
     stat, p_value = stats.wilcoxon(memory, no_memory)
 
     print(f"{category}: Wilcoxon signed-rank test: Statistic={stat}, p-value={p_value}")
@@ -369,45 +432,72 @@ def test_category_effect(engagement_df, category):
     })
 
 def test_user_engagement():
-    # map questions to categories
-    fa_questions = ['FA_Q1', 'FA_Q2', 'FA_Q3']
-    pu_questions = ['PU_Q1', 'PU_Q2', 'PU_Q3']
-    ae_questions = ['AE_Q1', 'AE_Q2', 'AE_Q3']
-    rw_questions = ['RW_Q1', 'RW_Q2', 'RW_Q3']
+    # Map questions to categories
+    categories = {
+        'FA': ['FA_Q1', 'FA_Q2', 'FA_Q3'],
+        'PU': ['PU_Q1', 'PU_Q2', 'PU_Q3'],
+        'AE': ['AE_Q1', 'AE_Q2', 'AE_Q3'],
+        'RW': ['RW_Q1', 'RW_Q2', 'RW_Q3']
+    }
 
+    # Flatten all category questions into engagement_columns
+    engagement_columns = [q for questions in categories.values() for q in questions]
+
+    # Load and merge engagement data
     memory_df, no_memory_df = load_engagement_data()
-
-    # merge the frames and rename the columns to the labels above
-    engagement_columns = fa_questions + pu_questions + ae_questions + rw_questions
     merged = merge_engagement_data(memory_df, no_memory_df, engagement_columns)
 
-    # Calculate composite scores and add as new columns
-    merged = compute_composite_scores(merged, 2, 4, 'FA')
-    merged = compute_composite_scores(merged, 5, 7, 'PU')
-    merged = compute_composite_scores(merged, 8, 10, 'AE')
-    merged = compute_composite_scores(merged, 11, 13, 'RW')
 
+    # Calculate composite scores for each category
+    start_col = 2  # Start index for the first category
+    for i, (category, questions) in enumerate(categories.items()):
+        merged = compute_composite_scores(merged, start_col, start_col + len(questions), category)
+        start_col += len(questions)
+
+    # Print merged DataFrame info
     print(merged.columns)
     print(merged.shape)
+
+    # Test the effect of memory condition on each category
+    for category in categories.keys():
+        test_category_effect(merged, category)
+
+    # Plot the engagement scores
+    plot_engagement_category_distributions(merged, categories)
+
+#begums version
+def test_word_recall2(language, data):
+    paired_data = data.pivot(index='ID', columns='Memory', values='Score').dropna()
+    memory = pd.to_numeric(paired_data[1], errors='coerce')
+    no_memory = pd.to_numeric(paired_data[0], errors='coerce')
     
-    test_category_effect(merged, 'FA')
-    test_category_effect(merged, 'PU')
-    test_category_effect(merged, 'AE')
-    test_category_effect(merged, 'RW')
+    if stats.shapiro(no_memory)[1] > 0.05 and stats.shapiro(memory)[1] > 0.05:
+        t_stat, p_value = stats.ttest_rel(no_memory, memory)
+        test_used = "Paired t-test"
+    else:
+        t_stat, p_value = stats.wilcoxon(no_memory, memory)
+        test_used = "Wilcoxon signed-rank test"
+    
+    print(f"{language}: {test_used}: Statistic={t_stat}, p-value={p_value}")
+    word_recall_results.append({
+        'Language': language,
+        'Test': test_used,
+        'Statistic': t_stat,
+        'p-value': p_value
+    })
 
 if __name__ == "__main__":
-    # test_word_recall_individual()
-
-    test_user_engagement()
-    # plot_engagement()
-
+    # 1. Word Recall Analysis
+    # word_recall_individual_analysis()
     # pd.DataFrame(word_recall_results).to_csv("output/word_recall_results.csv", index=False)
-    # pd.DataFrame(engagement_results).to_csv("output/engagement_results.csv", index=False)
 
-    # measure_word_recall_all_languages()
+    measure_word_recall_all_languages()
 
-    # analyze_background_effects_on_word_recall()
+    analyze_background_effects_on_word_recall()
 
+    # 2. User Engagement Analysis
+    test_user_engagement()
+    pd.DataFrame(engagement_results).to_csv("output/engagement_results.csv", index=False)
 
 
 

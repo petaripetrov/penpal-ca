@@ -1,0 +1,5 @@
+Language,Test,Mean_Difference,Statistic,p-value
+Spanish,Paired t-test,1.125,1.6879710397858663,0.1352726369857419
+French,Paired t-test,0.0,0.0,1.0
+Japanese,Wilcoxon signed-rank test,0.3333333333333339,4.5,1.0
+German,Wilcoxon signed-rank test,1.25,0.0,0.015625

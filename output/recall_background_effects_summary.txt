@@ -2,42 +2,18 @@
 ==============================================================
 Model:               MixedLM   Dependent Variable:   Score    
 No. Observations:    60        Method:               REML     
-No. Groups:          30        Scale:                1.2788   
-Min. group size:     2         Log-Likelihood:       -114.1925
+No. Groups:          30        Scale:                1.3205   
+Min. group size:     2         Log-Likelihood:       -114.4368
 Max. group size:     2         Converged:            Yes      
 Mean group size:     2.0                                      
 --------------------------------------------------------------
                     Coef.  Std.Err.   z    P>|z| [0.025 0.975]
 --------------------------------------------------------------
-Intercept            7.410    1.484  4.995 0.000  4.502 10.318
-Memory               1.659    0.759  2.185 0.029  0.171  3.148
-NumLanguages         0.036    0.264  0.136 0.892 -0.481  0.553
-Memory:NumLanguages -0.264    0.205 -1.288 0.198 -0.665  0.138
-PriorExperience     -0.776    1.375 -0.564 0.572 -3.470  1.918
-CAFamiliarity        1.062    0.818  1.299 0.194 -0.541  2.666
-Group Var            2.736    1.151                           
+Intercept            7.402    1.473  5.024 0.000  4.514 10.290
+Memory               1.657    0.772  2.148 0.032  0.145  3.170
+NumLanguages         0.045    0.262  0.173 0.862 -0.469  0.560
+Memory:NumLanguages -0.276    0.207 -1.328 0.184 -0.682  0.131
+PriorExperience     -0.764    1.363 -0.561 0.575 -3.436  1.907
+CAFamiliarity        1.046    0.811  1.289 0.197 -0.544  2.635
+Group Var            2.658    1.112                           
 ==============================================================
-
-Memory (1.659, p = 0.029):
-This coefficient indicates that, on average, being in the Memory condition (compared to the reference, which is likely no_memory) is associated with an increase in score of about 1.66 points. 
-The p-value (0.029) shows this effect is statistically significant, meaning there’s evidence that the memory condition improves scores.
-
-NumLanguages (0.036, p = 0.892):
-The coefficient for NumLanguages is very small (0.036) and not statistically significant (p = 0.892). 
-This suggests that, in the baseline condition, the number of languages spoken does not have a meaningful impact on scores.
-
-Memory:NumLanguages Interaction (-0.264, p = 0.198):
-This interaction term tests whether the effect of the Memory condition changes with the number of languages spoken. 
-The negative coefficient (-0.264) suggests that the benefit of the Memory condition might decrease slightly as the number of languages increases, but with a p-value of 0.198, this interaction is not statistically significant.
-
-PriorExperience (-0.776, p = 0.572):
-This effect is negative, indicating that having prior language learning experience might be associated with a lower score (by about 0.78 points), 
-but it is not statistically significant (p = 0.572). There isn’t enough evidence to conclude a reliable effect here.
-
-CAFamiliarity (1.062, p = 0.194):
-This coefficient indicates that familiarity with conversational agents (CAs) is associated with a 1.06 point increase in score. 
-However, with a p-value of 0.194, this effect is not statistically significant at the conventional 0.05 level.
-
-Group Var (2.736):
-This represents the variance attributable to differences between groups (in this case, each subject’s paired data, since each participant provided two observations). 
-A value of 2.736 indicates there is some variability between participants that the model accounts for.
